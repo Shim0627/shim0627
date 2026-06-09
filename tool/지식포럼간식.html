@@ -1,0 +1,237 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+<meta charset="UTF-8">
+<title>지식포럼 간식 라벨</title>
+<style>
+  * { box-sizing: border-box; margin: 0; padding: 0; }
+
+  body {
+    font-family: 'Malgun Gothic', '맑은 고딕', sans-serif;
+    background: #f0f0f0;
+    padding: 20px;
+  }
+
+  .upload-panel {
+    background: #fff;
+    border: 2px dashed #2563eb;
+    border-radius: 12px;
+    padding: 24px;
+    margin-bottom: 16px;
+    text-align: center;
+  }
+  .upload-panel h2 { font-size: 16px; color: #1e40af; margin-bottom: 6px; }
+  .upload-panel p  { font-size: 13px; color: #666; margin-bottom: 14px; }
+  #fileInput { display: none; }
+  .btn-upload {
+    padding: 10px 22px; background: #2563eb; color: #fff;
+    border: none; border-radius: 8px; font-size: 14px; cursor: pointer; font-weight: bold;
+  }
+  .btn-upload:hover { background: #1d4ed8; }
+  #preview-img {
+    max-width: 320px; max-height: 160px; border-radius: 8px;
+    border: 1px solid #ddd; display: none; margin: 12px auto 0;
+  }
+
+  .controls {
+    background: #fff;
+    border: 1px solid #ccc;
+    border-radius: 8px;
+    padding: 14px 20px;
+    margin-bottom: 20px;
+    display: flex;
+    flex-wrap: wrap;
+    gap: 18px;
+    align-items: center;
+  }
+  .controls label { font-size: 14px; font-weight: bold; color: #333; }
+  .controls input[type=range] { width: 130px; cursor: pointer; }
+  .controls span { font-size: 13px; color: #555; min-width: 36px; }
+  .ctrl-group { display: flex; align-items: center; gap: 8px; }
+  .ctrl-title { font-size: 15px; font-weight: 900; color: #222; border-right: 2px solid #ddd; padding-right: 16px; margin-right: 4px; }
+
+  /* ── 라벨 시트 (1장) ──
+     실측: 위 15mm, 아래 12.5mm, 좌우 7.5mm
+     7행 기준 행 높이: (297 - 15 - 12.5) / 7 = 38.5mm
+     열 폭: (210 - 15) / 3 = 65mm
+  */
+  .sheet {
+    background: white;
+    width: 210mm;
+    height: 297mm;
+    padding: 15mm 7.5mm 12.5mm 7.5mm;
+    margin: 0 auto;
+    box-shadow: 0 2px 10px rgba(0,0,0,0.15);
+    overflow: hidden;
+  }
+  .sheet + .sheet {
+    margin-top: 20px;
+  }
+
+  .label-grid {
+    display: grid;
+    grid-template-columns: repeat(3, 65mm);
+    gap: 0;
+    width: 195mm;
+  }
+
+  .label-cell {
+    width: 65mm;
+    height: 38.5mm;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
+    border: 0.3px solid #bbb;
+    padding: 4px;
+    text-align: center;
+    overflow: hidden;
+  }
+
+  .label-조 { font-weight: bold; line-height: 1.3; }
+  .label-명 { line-height: 1.3; }
+
+  /* 페이지 구분선 (화면용) */
+  .page-label {
+    text-align: center;
+    font-size: 12px;
+    color: #999;
+    margin: 8px 0 4px;
+  }
+
+  @page { size: A4; margin: 0; }
+  @media print {
+    body { background: none; padding: 0; }
+    .upload-panel, .controls, .page-label { display: none !important; }
+    .sheet {
+      box-shadow: none;
+      margin: 0;
+      page-break-after: always;
+    }
+    .sheet:last-child {
+      page-break-after: avoid;
+    }
+    .label-cell { border: 0.3px solid #999; }
+  }
+</style>
+</head>
+<body>
+
+<div class="upload-panel">
+  <h2>📊 차트 이미지 업로드</h2>
+  <p>조별 인원 차트 캡처를 선택하면 미리보기가 표시됩니다.<br>이미지를 Claude에게 전달하면 라벨이 자동으로 업데이트됩니다.</p>
+  <button class="btn-upload" onclick="document.getElementById('fileInput').click()">🖼️ 이미지 선택</button>
+  <input type="file" id="fileInput" accept="image/*" onchange="onFileSelected(event)">
+  <img id="preview-img" alt="미리보기">
+</div>
+
+<div class="controls">
+  <span class="ctrl-title">🏷️ 라벨 설정</span>
+  <div class="ctrl-group">
+    <label for="r-조-size">조 글씨 크기</label>
+    <input type="range" id="r-조-size" min="6" max="30" value="18" oninput="applyStyle()">
+    <span id="v-조-size">18pt</span>
+  </div>
+  <div class="ctrl-group">
+    <label for="r-명-size">명 글씨 크기</label>
+    <input type="range" id="r-명-size" min="6" max="30" value="15" oninput="applyStyle()">
+    <span id="v-명-size">15pt</span>
+  </div>
+  <div class="ctrl-group">
+    <label><input type="checkbox" id="ck-조-bold" checked onchange="applyStyle()"> 조 진하게</label>
+    <label><input type="checkbox" id="ck-명-bold" onchange="applyStyle()"> 명 진하게</label>
+  </div>
+  <div class="ctrl-group">
+    <label for="r-gap">줄 간격</label>
+    <input type="range" id="r-gap" min="1" max="2.5" step="0.1" value="1.4" oninput="applyStyle()">
+    <span id="v-gap">1.4</span>
+  </div>
+  <button onclick="window.print()" style="margin-left:auto;padding:8px 20px;background:#2563eb;color:#fff;border:none;border-radius:6px;font-size:14px;cursor:pointer;font-weight:bold;">🖨️ 인쇄</button>
+</div>
+
+<!-- 1페이지: 1~21조 -->
+<div class="page-label">📄 1페이지 (1조~21조)</div>
+<div class="sheet">
+  <div class="label-grid" id="grid1"></div>
+</div>
+
+<!-- 2페이지: 22~29조 -->
+<div class="page-label">📄 2페이지 (22조~29조)</div>
+<div class="sheet">
+  <div class="label-grid" id="grid2"></div>
+</div>
+
+<script>
+const CELLS_PER_PAGE = 21; // 3열 × 7행
+let groups = [
+  {조:1,명:4},{조:2,명:9},{조:3,명:6},{조:4,명:6},{조:5,명:5},
+  {조:6,명:6},{조:7,명:6},{조:8,명:9},{조:9,명:6},{조:10,명:5},
+  {조:11,명:4},{조:12,명:4},{조:13,명:7},{조:14,명:9},{조:15,명:7},
+  {조:16,명:4},{조:17,명:9},{조:18,명:8},{조:19,명:6},{조:20,명:6},
+  {조:21,명:6},{조:22,명:6},{조:23,명:7},{조:24,명:4},{조:25,명:6},
+  {조:26,명:7},{조:27,명:6},{조:28,명:8},{조:29,명:6}
+];
+
+renderGrid('grid1', groups.slice(0, CELLS_PER_PAGE), CELLS_PER_PAGE);
+renderGrid('grid2', groups.slice(CELLS_PER_PAGE), CELLS_PER_PAGE);
+applyStyle();
+
+function onFileSelected(e) {
+  const file = e.target.files[0];
+  if (!file) return;
+  const reader = new FileReader();
+  reader.onload = ev => {
+    const img = document.getElementById('preview-img');
+    img.src = ev.target.result;
+    img.style.display = 'block';
+  };
+  reader.readAsDataURL(file);
+}
+
+function renderGrid(id, data, total) {
+  const grid = document.getElementById(id);
+  grid.innerHTML = '';
+  for (let i = 0; i < total; i++) {
+    const cell = document.createElement('div');
+    cell.className = 'label-cell';
+    if (i < data.length) {
+      const g = data[i];
+      const idx = id === 'grid1' ? i : CELLS_PER_PAGE + i;
+      cell.innerHTML = `
+        <div class="label-조" id="조-${idx}">${g.조}조</div>
+        <div class="label-명" id="명-${idx}">${g.명}명</div>
+      `;
+    }
+    grid.appendChild(cell);
+  }
+}
+
+function applyStyle() {
+  const 조Size = document.getElementById('r-조-size').value;
+  const 명Size = document.getElementById('r-명-size').value;
+  const 조Bold = document.getElementById('ck-조-bold').checked;
+  const 명Bold = document.getElementById('ck-명-bold').checked;
+  const gap    = document.getElementById('r-gap').value;
+
+  document.getElementById('v-조-size').textContent = 조Size + 'pt';
+  document.getElementById('v-명-size').textContent = 명Size + 'pt';
+  document.getElementById('v-gap').textContent = gap;
+
+  for (let i = 0; i < groups.length; i++) {
+    const 조El = document.getElementById(`조-${i}`);
+    const 명El = document.getElementById(`명-${i}`);
+    if (조El) {
+      조El.style.fontSize = 조Size + 'pt';
+      조El.style.fontWeight = 조Bold ? 'bold' : 'normal';
+      조El.style.lineHeight = gap;
+    }
+    if (명El) {
+      명El.style.fontSize = 명Size + 'pt';
+      명El.style.fontWeight = 명Bold ? 'bold' : 'normal';
+      명El.style.lineHeight = gap;
+    }
+  }
+}
+</script>
+</body>
+</html>
