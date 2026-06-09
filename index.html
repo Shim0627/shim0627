@@ -1,0 +1,1115 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width,initial-scale=1.0">
+<title>엄마감동팀</title>
+<style>
+* { box-sizing: border-box; margin: 0; padding: 0; }
+body { background: #1a2e50; font-family: 'Malgun Gothic', '맑은 고딕', sans-serif; font-size: 13px; color: #fff; display: flex; flex-direction: column; height: 100vh; overflow: hidden; }
+
+.header {
+  display: flex; align-items: center; justify-content: space-between;
+  background: #1a2e50; padding: 0 20px; height: 44px;
+  flex-shrink: 0; border-bottom: 1px solid #243d6a;
+}
+.header-title { font-size: 15px; font-weight: 700; letter-spacing: 0.5px; }
+.header-date { font-size: 11px; color: #8aaccc; }
+
+.tabs {
+  display: flex; align-items: center; background: #1a2e50;
+  padding: 0 20px; height: 38px; flex-shrink: 0;
+  gap: 2px; border-bottom: 2px solid #243d6a;
+}
+.tab {
+  padding: 0 16px; height: 38px; display: flex; align-items: center;
+  font-size: 12.5px; color: #8aaccc; cursor: pointer;
+  border-bottom: 3px solid transparent;
+  transition: color 0.15s, border-color 0.15s;
+  white-space: nowrap; user-select: none;
+}
+.tab:hover { color: #c8ddf0; }
+.tab.active { color: #fff; border-bottom-color: #4a9fd4; font-weight: 600; }
+
+.main { display: flex; flex: 1; overflow: hidden; }
+
+
+/* ── 로그인 오버레이 ── */
+#loginOverlay {
+  position: fixed; inset: 0; z-index: 9999;
+  background: #0d1825;
+  display: flex; align-items: center; justify-content: center;
+}
+.login-box {
+  background: #1a2e50; border-radius: 16px;
+  padding: 44px 40px; width: 360px;
+  border: 0.5px solid #2a4060;
+}
+.login-logo { text-align: center; margin-bottom: 32px; }
+.login-logo .logo-icon {
+  width: 56px; height: 56px; border-radius: 50%;
+  background: #2356a8;
+  margin: 0 auto 14px;
+  display: flex; align-items: center; justify-content: center;
+}
+.login-logo .logo-icon i { font-size: 26px; color: #fff; }
+.login-logo .logo-title { font-size: 20px; font-weight: 500; color: #e0eefc; letter-spacing: 1px; }
+.login-logo .logo-sub   { font-size: 12px; color: #5a7a9a; margin-top: 5px; letter-spacing: 0.5px; }
+.login-field { margin-bottom: 16px; }
+.login-field label { font-size: 11px; color: #7a9ec0; display: block; margin-bottom: 6px; letter-spacing: 0.8px; }
+.login-input-wrap { position: relative; }
+.login-input {
+  width: 100%; background: #111e35; border: 1px solid #2a4060;
+  color: #c8ddf0; padding: 9px 12px 9px 34px; font-size: 13px;
+  border-radius: 8px; outline: none; font-family: inherit; box-sizing: border-box;
+  appearance: none; -webkit-appearance: none;
+}
+.login-input:focus { border-color: #4a9fd4; }
+.login-select-wrap { position: relative; }
+.login-select-wrap .sel-chevron {
+  position: absolute; right: 10px; top: 50%; transform: translateY(-50%);
+  font-size: 11px; color: #a8c4df; pointer-events: none;
+  font-style: normal; line-height: 1;
+}
+.login-select-wrap select.login-input {
+  appearance: none; -webkit-appearance: none; -moz-appearance: none;
+  padding-right: 36px; cursor: pointer;
+}
+.login-remember {
+  display: flex; align-items: center; gap: 8px;
+  margin-bottom: 22px; cursor: pointer;
+}
+.login-remember .chk-box {
+  width: 17px; height: 17px; border-radius: 4px;
+  background: #111e35; border: 1px solid #2a4060;
+  display: flex; align-items: center; justify-content: center;
+  flex-shrink: 0; transition: background 0.15s, border-color 0.15s;
+}
+.login-remember .chk-box.checked { background: #2356a8; border-color: #4a9fd4; }
+.login-remember .chk-box i { font-size: 12px; color: #fff; display: none; }
+.login-remember .chk-box.checked i { display: block; }
+.login-remember span { font-size: 12px; color: #7a9ec0; }
+.login-btn {
+  width: 100%; background: #2356a8; border: none; color: #fff;
+  padding: 11px; font-size: 14px; font-weight: 500; letter-spacing: 0.5px;
+  border-radius: 8px; cursor: pointer; font-family: inherit; transition: background 0.15s;
+}
+.login-btn:hover { background: #1a3a7a; }
+.login-error {
+  color: #e87a7a; font-size: 11.5px; text-align: center;
+  margin-top: 10px; min-height: 18px;
+}
+.login-footer { text-align: center; font-size: 11px; color: #3a5a7a; margin-top: 20px; }
+
+/* ── 사이드바 ── */
+.sidebar {
+  width: 174px; background: #111e35; flex-shrink: 0;
+  overflow-y: auto; padding: 10px 0;
+  display: flex; flex-direction: column;
+  border-right: 1px solid #1a2e4a;
+}
+.sb-label {
+  font-size: 10px; color: #7a9ec0;
+  padding: 10px 16px 3px; letter-spacing: 1px;
+  font-weight: 700; text-transform: uppercase;
+}
+.sb-item {
+  padding: 6px 16px; font-size: 12.5px; color: #a8c4df;
+  cursor: pointer; transition: color 0.1s, background 0.1s;
+  white-space: nowrap;
+}
+.sb-item:hover { background: #1a2e4a; color: #e0eefc; }
+.sb-item.active { color: #5bb8f5; font-weight: 700; background: #162640; }
+.sb-item.sub { padding-left: 26px; font-size: 12px; color: #8aaac8; }
+.sb-item.sub:hover { color: #e0eefc; background: #1a2e4a; }
+.sb-item.sub.active { color: #5bb8f5; font-weight: 700; background: #162640; }
+.sb-item.off { color: #2e4460 !important; cursor: default; pointer-events: none; }
+
+.now-dot {
+  display: inline-block; width: 6px; height: 6px;
+  border-radius: 50%; background: #5bb8f5;
+  margin-left: 5px; vertical-align: middle;
+}
+.week-range { font-size: 10px; color: #6a8faa; display: block; padding-left: 4px; }
+
+/* 주간 토글 버튼 */
+.sb-toggle {
+  padding: 6px 16px; font-size: 12.5px; color: #a8c4df;
+  cursor: pointer; display: flex; align-items: center;
+  justify-content: space-between;
+  transition: color 0.1s, background 0.1s;
+}
+.sb-toggle:hover { background: #1a2e4a; color: #e0eefc; }
+.arrow { font-size: 9px; transition: transform 0.2s; display: inline-block; }
+.arrow.open { transform: rotate(180deg); }
+
+.weekly-list { display: none; }
+.weekly-list.open { display: block; }
+
+/* 직접선택 달력 */
+.date-pick-wrap { padding: 4px 16px 8px; }
+
+.cal-toggle-btn {
+  width: 100%; background: #1a2e4a; border: 1px solid #2a4060;
+  color: #a8c4df; padding: 5px 8px; font-size: 11.5px;
+  border-radius: 3px; cursor: pointer; outline: none;
+  font-family: inherit; text-align: left; display: flex;
+  justify-content: space-between; align-items: center;
+}
+.cal-toggle-btn:hover { border-color: #5bb8f5; color: #e0eefc; }
+
+.cal-popup {
+  display: none; background: #0e1a2e;
+  border: 1px solid #2a4060; border-radius: 5px;
+  padding: 8px 6px; margin-top: 4px; user-select: none;
+}
+.cal-popup.open { display: block; }
+
+.cal-nav {
+  display: flex; align-items: center; justify-content: space-between;
+  margin-bottom: 6px; padding: 0 2px;
+}
+.cal-nav-btn {
+  background: none; border: none; color: #7a9ec0;
+  cursor: pointer; font-size: 13px; padding: 2px 6px; border-radius: 3px;
+}
+.cal-nav-btn:hover { background: #1a2e4a; color: #e0eefc; }
+.cal-month-label { font-size: 11.5px; font-weight: 700; color: #c8ddf0; }
+
+.cal-dow { display: grid; grid-template-columns: repeat(7, 1fr); margin-bottom: 2px; }
+.cal-dow span { text-align: center; font-size: 9.5px; color: #4a6a8a; padding: 2px 0; }
+.cal-dow span:first-child { color: #7a3a3a; }
+.cal-dow span:last-child  { color: #3a5a8a; }
+
+.cal-grid { display: grid; grid-template-columns: repeat(7, 1fr); gap: 1px; }
+.cal-cell {
+  text-align: center; font-size: 10.5px; padding: 3px 1px;
+  border-radius: 2px; cursor: pointer; color: #8aaac8;
+  transition: background 0.1s, color 0.1s;
+}
+.cal-cell.other-month { color: #2e4460; }
+.cal-cell.sun { color: #7a3a3a; }
+.cal-cell.sat { color: #3a5a8a; }
+.cal-cell.week-hover { background: #1a3a5a; color: #c8ddf0; }
+.cal-cell.week-hover.fri-end { background: #1e4e7a; color: #5bb8f5; font-weight: 700; }
+.cal-cell.week-selected { background: #162e4e; color: #a8c4df; }
+.cal-cell.week-selected.fri-end { background: #1a3a6a; color: #5bb8f5; font-weight: 700; }
+.cal-cell.empty { cursor: default; pointer-events: none; }
+.cal-cell.today-marker { outline: 1px solid #3a5a7a; }
+
+.cal-result { font-size: 10px; color: #5bb8f5; margin-top: 5px; padding-left: 2px; min-height: 14px; font-weight: 600; }
+
+.sb-divider { height: 1px; background: #1a2e4a; margin: 6px 16px; }
+
+.sb-logout { margin-top: auto; padding: 10px 16px; }
+.logout-btn {
+  background: #1a2e4a; border: 1px solid #2a4060; color: #a8c4df;
+  padding: 7px 10px; border-radius: 4px; font-size: 11.5px;
+  cursor: pointer; width: 100%; text-align: left;
+}
+.logout-btn:hover { background: #223650; color: #e0eefc; }
+
+/* iframe */
+.content { flex: 1; overflow: hidden; }
+.content iframe { width: 100%; height: 100%; border: none; display: block; }
+</style>
+</head>
+<body>
+
+
+<!-- ── 로그인 오버레이 ── -->
+<div id="loginOverlay">
+  <div class="login-box">
+    <div class="login-logo">
+      <div class="logo-icon"><span style="font-size:26px;color:#fff;">♡</span></div>
+      <div class="logo-title">엄마감동팀</div>
+      <div class="logo-sub">CS 대시보드 · 로그인</div>
+    </div>
+
+    <div class="login-field">
+      <label>아이디</label>
+      <div class="login-input-wrap login-select-wrap">
+        <span style="position:absolute;left:11px;top:50%;transform:translateY(-50%);font-size:15px;line-height:1;pointer-events:none;z-index:1;">👤</span>
+        <select class="login-input" id="loginId" autocomplete="username">
+          <option value="리더급">리더급</option>
+          <option value="꿈비">꿈비</option>
+          <option value="에르모어">에르모어</option>
+          <option value="개발자모드">개발자모드</option>
+        </select>
+        <span class="sel-chevron" aria-hidden="true">▼</span>
+      </div>
+    </div>
+
+    <div class="login-field">
+      <label>비밀번호</label>
+      <div class="login-input-wrap">
+        <span style="position:absolute;left:11px;top:50%;transform:translateY(-50%);font-size:15px;line-height:1;pointer-events:none;z-index:1;">🔑</span>
+        <input type="password" class="login-input" id="loginPw" placeholder="PW 입력"
+               autocomplete="current-password" onkeydown="if(event.key==='Enter')tryLogin()">
+      </div>
+    </div>
+
+    <div class="login-remember" onclick="toggleRemember()">
+      <div class="chk-box" id="rememberChk"><span style="font-size:11px;color:#fff;display:none;" id="chkMark">✓</span></div>
+      <span>최근 로그인 정보 기억</span>
+    </div>
+
+    <button class="login-btn" onclick="tryLogin()">로그인</button>
+    <div class="login-error" id="loginError"></div>
+    <div class="login-footer">엄마감동팀 전용 시스템</div>
+  </div>
+</div>
+
+<div class="header">
+  <div class="header-title">엄마감동팀</div>
+  <div class="header-date" id="headerDate"></div>
+</div>
+
+<div class="tabs">
+  <div class="tab active" data-tab="AI보고" onclick="switchTab(this)">AI보고 <span style="font-size:10px;color:#4fc3f7;margin-left:2px;">★</span></div>
+  <div class="tab" data-tab="상담분석" onclick="switchTab(this)">상담분석</div>
+  <div class="tab" data-tab="주요kpi"  onclick="switchTab(this)">주요KPI</div>
+  <div class="tab" data-tab="상담실적" onclick="switchTab(this)">상담실적</div>
+  <div class="tab" data-tab="반품현황" onclick="switchTab(this)">반품현황</div>
+  <div class="tab" data-tab="처리현황" onclick="switchTab(this)">처리현황</div>
+  <div class="tab" data-tab="품질관리" onclick="switchTab(this)">품질관리</div>
+  <div class="tab" data-tab="건별보고" onclick="switchTab(this)">건별보고</div>
+  <div class="tab" data-tab="팀Tool"   onclick="switchTab(this)">팀Tool ✓</div>
+  <div class="tab" data-tab="개발자"   onclick="switchTab(this)">개발자</div>
+</div>
+
+<div class="main">
+
+  <div class="sidebar" id="sidebar">
+
+    <!-- ── 대시보드용 사이드바 ── -->
+    <div id="dashSidebar">
+      <div class="sb-label">연간현황</div>
+      <div class="sb-item" data-type="yearly" data-period="2026" onclick="selectPeriod(this)">2026년</div>
+      <div class="sb-divider"></div>
+
+      <div class="sb-label">월간현황</div>
+      <div id="monthlyList"></div>
+      <div class="sb-divider"></div>
+
+      <div class="sb-label">주간현황</div>
+      <div id="weeklyList"></div>
+      <div class="sb-divider"></div>
+
+      <div class="sb-label">직접선택 <span style="font-size:9px;color:#4a6a8a;font-weight:400;letter-spacing:0;text-transform:none;">주간</span></div>
+      <div class="date-pick-wrap">
+        <button class="cal-toggle-btn" onclick="toggleCal()" id="calToggleBtn">
+          <span id="calToggleLabel">날짜 선택</span><span>▾</span>
+        </button>
+        <div class="cal-popup" id="calPopup">
+          <div class="cal-nav">
+            <button class="cal-nav-btn" onclick="calMove(-1)">◀</button>
+            <span class="cal-month-label" id="calMonthLabel"></span>
+            <button class="cal-nav-btn" onclick="calMove(1)">▶</button>
+          </div>
+          <div class="cal-dow">
+            <span>일</span><span>월</span><span>화</span><span>수</span><span>목</span><span>금</span><span>토</span>
+          </div>
+          <div class="cal-grid" id="calGrid"></div>
+        </div>
+        <div class="cal-result" id="calResult"></div>
+      </div>
+    </div>
+
+    <!-- ── 팀Tool 전용 사이드바 ── -->
+    <!-- ── 건별보고 전용 사이드바 ── -->
+    <div id="onceSidebar" style="display:none;">
+      <div class="sb-label">건별보고</div>
+      <div class="sb-item" onclick="onceNav('report/once/allstain.html', this)">세척기 (꿈비-브레쨔)</div>
+    </div>
+
+    <div id="toolSidebar" style="display:none;">
+      <div class="sb-label">팀 Tool</div>
+      <div class="sb-item" onclick="toolNav('tool/tool_main.html', this)">업무Tool 코딩</div>
+      <div class="sb-item" onclick="toolNav('chat/chat_main.html', this)">소통Chat</div>
+      <div class="sb-divider"></div>
+      <div class="sb-label">실적마감 Tool</div>
+      <div class="sb-item" onclick="toolNav('tool/downloader.html', this)">CSV 다운로더</div>
+      <div class="sb-item" onclick="toolNav('tool/as5.html', this)">어드민 패턴 분류기</div>
+      <div class="sb-item" onclick="toolNav('tool/as6.html', this)">이미지 PDF 변환기</div>
+      <div class="sb-item" onclick="toolNav('tool/as7.html', this)">이중압축 해제기</div>
+      <div class="sb-divider"></div>
+      <div class="sb-label">반품입고 Tool</div>
+      <div class="sb-item" onclick="toolNavExternal('https://cs-as-app.vercel.app/', this)">반품검사 기록</div>
+      <div class="sb-divider"></div>
+      <div class="sb-label">팀복지</div>
+      <div class="sb-item" onclick="toolNav('tool/팀간식룰렛.html', this)">이달의 간식 추첨</div>
+      <div class="sb-divider"></div>
+      <div class="sb-label">개인설정</div>
+      <div class="sb-item" onclick="toolNav('tool/user/권미숙.html', this)">권미숙</div>
+      <div class="sb-item" onclick="toolNav('tool/user/심우승.html', this)">심우승</div>
+      <div class="sb-item" onclick="toolNav('tool/user/이대훈.html', this)">이대훈</div>
+      <div class="sb-item" onclick="toolNav('tool/user/강민성.html', this)">강민성</div>
+      <div class="sb-item" onclick="toolNav('tool/user/박수진.html', this)">박수진</div>
+      <div class="sb-item" onclick="toolNav('tool/user/장진영.html', this)">장진영</div>
+      <div class="sb-item" onclick="toolNav('tool/user/정지현.html', this)">정지현</div>
+      <div class="sb-item" onclick="toolNav('tool/user/조승연.html', this)">조승연</div>
+    </div>
+
+    <div class="sb-logout">
+      <button class="logout-btn" onclick="doLogout()">🔒 로그아웃</button>
+    </div>
+
+  </div>
+
+  <div class="content">
+    <iframe id="mainFrame"></iframe>
+  </div>
+
+</div>
+
+<script>
+// ═══════════════════════════════════════════════════
+//  기간 파라미터 구조
+//
+//  하위 페이지(report/*.html)는 URL 파라미터를 읽어서
+//  해당 기간 데이터를 필터링하면 됨.
+//
+//  전달 파라미터:
+//    ?type=monthly  &period=2026-04
+//    ?type=weekly   &period=2026-04-17   ← 금요일 날짜
+//    ?type=yearly   &period=2026
+//    ?type=direct   &period=2026-04-15
+//
+//  주간 기준: 토요일 시작 ~ 금요일 종료
+//    예) period=2026-04-17 → 4/11(토)~4/17(금)
+//
+//  하위 페이지에서 읽는 예시 코드 (각 report/*.html 에 삽입):
+//  ─────────────────────────────────────────────────
+//  const params = new URLSearchParams(window.location.search);
+//  const type   = params.get('type')   || 'monthly';
+//  const period = params.get('period') || '';
+//
+//  if (type === 'weekly' && period) {
+//    const fri   = new Date(period);
+//    const sat   = new Date(fri); sat.setDate(fri.getDate() - 6);
+//    // sat ~ fri 범위로 데이터 필터
+//  }
+//  if (type === 'monthly' && period) {
+//    const [year, month] = period.split('-');
+//    // year, month 로 필터
+//  }
+// ═══════════════════════════════════════════════════
+
+// ── 중앙 관리 SCRIPT_URL ───────────────────────────
+// 앱스크립트 배포 URL이 바뀌면 여기만 수정
+const SCRIPT_URL = 'https://script.google.com/macros/s/AKfycbymKpZXyoAmsI978lOgGcJI8Z26J6UE8XesXb7haMJ6dRT16jAIFsJANMnK-Y9Wd35jNA/exec';
+
+const TAB_MAP = {
+  '주요kpi':  'report/kpi.html',
+  '상담실적': 'report/상담실적.html',
+  '반품현황': 'report/반품현황.html',
+  '처리현황': 'report/처리현황.html',
+  '품질관리': 'report/품질관리.html',
+  '건별보고': 'report/once/allstain.html',
+  'AI보고':   'report/ai보고.html',
+  '상담분석':  'report/채널톡보고.html',
+  '팀Tool':   'report/팀Tool.html',
+  '개발자':   'report/개발자.html',
+};
+
+let state = {
+  tab: '상담실적',
+  type: 'monthly',
+  period: ''
+};
+
+// ── 날짜 유틸 ──────────────────────────────────────
+function pad(n) { return String(n).padStart(2, '0'); }
+function toKey(d) { return `${d.getFullYear()}-${pad(d.getMonth()+1)}-${pad(d.getDate())}`; }
+function toDisplay(d) { return `${d.getMonth()+1}/${d.getDate()}`; }
+
+// ── 포맷 변환 (내부 → 송출용) ──────────────────────
+// 월간: '2026-04'      → '26.04월'
+// 주간: '2026-04-17'   → '260417'   (금요일 YYMMDD)
+// 직접: '2026-04-15'   → '260415'
+function toPeriodParam(type, raw) {
+  if (type === 'monthly') {
+    const [y, m] = raw.split('-');
+    return `${String(y).slice(2)}.${m}월`;          // 26.04월
+  }
+  if (type === 'weekly' || type === 'direct') {
+    return raw.replace(/-/g, '').slice(2);           // 260417
+  }
+  return raw; // yearly 등 그대로
+}
+
+// 주간: 금요일 기준 → 해당주 토(금-6일)~금
+function weekRange(fridayDate) {
+  const fri = new Date(fridayDate);
+  const sat = new Date(fri);
+  sat.setDate(fri.getDate() - 6);
+  return { sat, fri };
+}
+
+// 기본 표시 금요일:
+// 월요일(1) 이상이면 지난주 금요일, 일요일(0)/토요일(6)이면 이번주 금요일
+function thisWeekFriday() {
+  const today = new Date();
+  const day = today.getDay(); // 0=일 1=월 ... 5=금 6=토
+  const fri = new Date(today);
+  if (day === 1) {
+    // 월요일 → 지난주 금요일 (3일 전)
+    fri.setDate(today.getDate() - 3);
+  } else if (day === 2 || day === 3 || day === 4) {
+    // 화~목 → 지난주 금요일
+    fri.setDate(today.getDate() - (day + 2));
+  } else if (day === 5) {
+    // 금요일 → 지난주 금요일 (아직 오늘자 마감 전)
+    fri.setDate(today.getDate() - 7);
+  } else if (day === 6) {
+    // 토요일 → 어제(금)가 이번주 마감
+    fri.setDate(today.getDate() - 1);
+  } else {
+    // 일요일 → 지난 금요일 (2일 전)
+    fri.setDate(today.getDate() - 2);
+  }
+  return fri;
+}
+
+// 기본 표시 월: 말일 기준 전월
+// 오늘이 말일이 아니면 전월, 말일이면 당월
+function defaultMonth() {
+  const today = new Date();
+  const year  = today.getFullYear();
+  const month = today.getMonth() + 1; // 1~12
+  // 오늘이 해당월 말일인지 확인
+  const lastDay = new Date(year, month, 0).getDate();
+  if (today.getDate() === lastDay) {
+    // 말일이면 당월
+    return { year, month };
+  } else {
+    // 말일 전이면 전월
+    const prevMonth = month === 1 ? 12 : month - 1;
+    const prevYear  = month === 1 ? year - 1 : year;
+    return { year: prevYear, month: prevMonth };
+  }
+}
+
+// 올해 금요일 목록 (오늘 이전, 최신순)
+function fridaysUntilToday(year) {
+  const list = [];
+  const d = new Date(year, 0, 1);
+  while (d.getDay() !== 5) d.setDate(d.getDate() + 1);
+  const today = new Date();
+  while (d.getFullYear() === year && d <= today) {
+    list.push(new Date(d));
+    d.setDate(d.getDate() + 7);
+  }
+  return list.reverse();
+}
+
+// ── 렌더 ──────────────────────────────────────────
+function renderMonthly() {
+  const now  = new Date();
+  const year = now.getFullYear();
+  const curM = now.getMonth() + 1;        // 오늘 기준 현재 월
+  const def  = defaultMonth();            // 기본 선택 월 (전월 기준)
+  let html = '';
+  for (let m = 1; m <= 12; m++) {
+    const period = `${year}-${pad(m)}`;
+    const off = m > curM;                 // 미래월 비활성
+    const cur = m === def.month && year === def.year;  // 기본 선택
+    const cls = ['sb-item', 'sub', off ? 'off' : '', cur ? 'active' : ''].filter(Boolean).join(' ');
+    const dot = cur ? '<span class="now-dot"></span>' : '';
+    html += `<div class="${cls}" data-type="monthly" data-period="${period}"
+                  onclick="selectPeriod(this)">${m}월${dot}</div>`;
+  }
+  document.getElementById('monthlyList').innerHTML = html;
+}
+
+function renderWeekly() {
+  // 최근 6주만 표시 (최신순)
+  const fridays = fridaysUntilToday(new Date().getFullYear()).slice(0, 6);
+  const curKey  = toKey(thisWeekFriday());
+  let html = '';
+  fridays.forEach(fri => {
+    const { sat } = weekRange(fri);
+    const period  = toKey(fri);
+    const cur     = period === curKey;
+    const cls     = ['sb-item', 'sub', cur ? 'active' : ''].filter(Boolean).join(' ');
+    const dot     = cur ? '<span class="now-dot"></span>' : '';
+    html += `<div class="${cls}" data-type="weekly" data-period="${period}"
+                  onclick="selectPeriod(this)">
+               ${toDisplay(fri)}${dot}
+               <span class="week-range">${toDisplay(sat)}~${toDisplay(fri)}</span>
+             </div>`;
+  });
+  document.getElementById('weeklyList').innerHTML = html;
+}
+
+// ── 커스텀 달력 ────────────────────────────────────
+let calYear, calMonth, calHoverFri = null, calSelectedFri = null;
+
+function toggleCal() {
+  const popup = document.getElementById('calPopup');
+  popup.classList.toggle('open');
+  if (popup.classList.contains('open')) renderCal();
+}
+
+function calMove(dir) {
+  calMonth += dir;
+  if (calMonth < 0)  { calMonth = 11; calYear--; }
+  if (calMonth > 11) { calMonth = 0;  calYear++; }
+  renderCal();
+}
+
+// 어떤 날짜든 그 주(토~금) 금요일로 스냅
+function snapToFriday(d) {
+  const day = d.getDay(); // 0=일 ... 5=금 6=토
+  // 토요일: 이미 새 주 시작 → 다음 금요일(+6)
+  const diff = day === 6 ? 6 : (5 - day);
+  const fri = new Date(d);
+  fri.setDate(d.getDate() + diff);
+  return fri;
+}
+
+function renderCal() {
+  const label = document.getElementById('calMonthLabel');
+  label.textContent = `${calYear}년 ${calMonth + 1}월`;
+
+  const grid = document.getElementById('calGrid');
+  const today = new Date();
+  today.setHours(0,0,0,0);
+
+  // 이번달 1일의 요일
+  const firstDay = new Date(calYear, calMonth, 1).getDay();
+  // 이번달 마지막 날
+  const lastDate = new Date(calYear, calMonth + 1, 0).getDate();
+
+  let cells = [];
+
+  // 앞 빈칸 (이전달 날짜로 채움)
+  const prevLast = new Date(calYear, calMonth, 0).getDate();
+  for (let i = firstDay - 1; i >= 0; i--) {
+    cells.push({ day: prevLast - i, cur: false });
+  }
+  // 이번달
+  for (let d = 1; d <= lastDate; d++) {
+    cells.push({ day: d, cur: true });
+  }
+  // 뒤 빈칸
+  const tail = 7 - (cells.length % 7);
+  if (tail < 7) for (let d = 1; d <= tail; d++) cells.push({ day: d, cur: false });
+
+  let html = '';
+  cells.forEach((c, i) => {
+    const dow = i % 7; // 0=일 ~ 6=토
+    if (!c.cur) {
+      html += `<div class="cal-cell other-month empty">${c.day}</div>`;
+      return;
+    }
+    const date = new Date(calYear, calMonth, c.day);
+    date.setHours(0,0,0,0);
+    const fri = snapToFriday(date);
+    const friKey = toKey(fri);
+    const { sat } = weekRange(fri);
+
+    // hover 주 범위인지
+    const inHover = calHoverFri && friKey === toKey(calHoverFri);
+    // 선택된 주 범위인지
+    const inSel = calSelectedFri && friKey === toKey(calSelectedFri);
+    const isFriEnd = dow === 5; // 금요일 칸
+    const isToday = date.getTime() === today.getTime();
+
+    let cls = 'cal-cell';
+    if (dow === 0) cls += ' sun';
+    if (dow === 6) cls += ' sat';
+    if (inHover) cls += ' week-hover';
+    if (inHover && isFriEnd) cls += ' fri-end';
+    if (inSel && !inHover) cls += ' week-selected';
+    if (inSel && !inHover && isFriEnd) cls += ' fri-end';
+    if (isToday) cls += ' today-marker';
+
+    html += `<div class="${cls}"
+      onmouseenter="calHover('${friKey}')"
+      onmouseleave="calUnhover()"
+      onclick="selectCalWeek('${friKey}')"
+    >${c.day}</div>`;
+  });
+
+  grid.innerHTML = html;
+}
+
+function calHover(friKey) {
+  calHoverFri = new Date(friKey);
+  renderCal();
+}
+function calUnhover() {
+  calHoverFri = null;
+  renderCal();
+}
+
+function selectCalWeek(friKey) {
+  const fri = new Date(friKey);
+  const { sat } = weekRange(fri);
+  calSelectedFri = fri;
+
+  // 달력 토글 버튼 텍스트 = 금요일 날짜
+  document.getElementById('calToggleLabel').textContent =
+    `${toDisplay(fri)} (${toDisplay(sat)}~${toDisplay(fri)})`;
+
+  // 결과 레이블
+  document.getElementById('calResult').textContent =
+    `▶ ${fri.getFullYear()}.${pad(fri.getMonth()+1)}.${pad(fri.getDate())} (금)`;
+
+  // 달력 닫기
+  document.getElementById('calPopup').classList.remove('open');
+
+  renderCal();
+
+  // 6주 목록 active 연동
+  document.querySelectorAll('.sb-item').forEach(i => i.classList.remove('active'));
+  const match = document.querySelector(`.sb-item[data-period="${friKey}"]`);
+  if (match) match.classList.add('active');
+
+  state.type   = 'weekly';
+  state.period = friKey;
+  updateFrame();
+  updateHeader();
+}
+
+// ── 선택 핸들러 ────────────────────────────────────
+function selectPeriod(el) {
+  document.querySelectorAll('.sb-item').forEach(i => i.classList.remove('active'));
+  el.classList.add('active');
+  state.type   = el.dataset.type;
+  state.period = el.dataset.period;    // 내부키 저장
+  updateFrame();
+  updateHeader();
+}
+
+function toggleWeekly() {
+  // 더 이상 토글 없음 - 호환성 유지용 빈 함수
+}
+
+function switchTab(el) {
+  // 권한 체크
+  const role    = sessionStorage.getItem('userRole') || '';
+  const allowed = ROLE_TABS[role];
+  const tabName = el.dataset.tab;
+  if (allowed !== null && !allowed.includes(tabName)) {
+    // 탭 active 표시는 하되 권한 없음 메시지
+    document.querySelectorAll('.tab').forEach(t => t.classList.remove('active'));
+    el.classList.add('active');
+    state.tab = tabName;
+    showNoPermission(tabName);
+    return;
+  }
+  hideNoPermission();
+
+  document.querySelectorAll('.tab').forEach(t => t.classList.remove('active'));
+  el.classList.add('active');
+  state.tab = el.dataset.tab;
+
+  const isToolTab  = state.tab === '팀Tool' || state.tab === '개발자';
+  const isKpiTab   = state.tab === '주요kpi';
+  const isOnceTab  = state.tab === '건별보고';
+
+  document.getElementById('dashSidebar').style.display  = (isToolTab || isOnceTab) ? 'none' : 'block';
+  document.getElementById('toolSidebar').style.display  = isToolTab ? 'block' : 'none';
+  document.getElementById('onceSidebar').style.display  = isOnceTab ? 'block' : 'none';
+
+  // 주요KPI: 월간/주간/직접선택 숨김, 연간만 표시
+  const monthly  = document.getElementById('monthlyList');
+  const weekly   = document.getElementById('weeklyList');
+  const calWrap  = document.querySelector('.date-pick-wrap');
+  const sbLabels = document.querySelectorAll('#dashSidebar .sb-label');
+
+  if (isKpiTab) {
+    if (monthly)  monthly.style.display  = 'none';
+    if (weekly)   weekly.style.display   = 'none';
+    if (calWrap)  calWrap.style.display  = 'none';
+    // 월간/주간/직접선택 라벨 숨김 (연간 라벨만 남김)
+    sbLabels.forEach(lb => {
+      if (lb.textContent.trim() !== '연간현황') lb.style.display = 'none';
+    });
+    // sb-divider 도 숨김 (연간 아래 것만)
+    document.querySelectorAll('#dashSidebar .sb-divider').forEach(d => d.style.display = 'none');
+    // 주요KPI는 yearly로 신호
+    state.type   = 'yearly';
+    state.period = String(new Date().getFullYear());
+  } else {
+    // 다른 탭: 원래대로 복원
+    if (monthly)  monthly.style.display  = '';
+    if (weekly)   weekly.style.display   = '';
+    if (calWrap)  calWrap.style.display  = '';
+    sbLabels.forEach(lb => lb.style.display = '');
+    document.querySelectorAll('#dashSidebar .sb-divider').forEach(d => d.style.display = '');
+    // 기본 monthly 로 복귀 (KPI에서 다른 탭으로 이동 시)
+    if (state.type === 'yearly') {
+      const def    = defaultMonth();
+      state.type   = 'monthly';
+      state.period = `${def.year}-${pad(def.month)}`;
+    }
+  }
+
+  if (isOnceTab) {
+    onceNav('report/once/allstain.html', null);
+  } else if (isToolTab) {
+    if (state.tab === '팀Tool') toolNav('tool/tool_main.html', null);
+    else if (state.tab === '개발자') toolNav('report/개발자.html', null);
+    setTimeout(() => loadAndBroadcastCSV(false), 0);
+  } else {
+    updateFrame();
+    updateHeader();
+  }
+}
+
+// 팀Tool 내 메뉴 이동
+function onceNav(path, el) {
+  if (el) {
+    document.querySelectorAll('#onceSidebar .sb-item').forEach(i => i.classList.remove('active'));
+    el.classList.add('active');
+  }
+  document.getElementById('mainFrame').src = path;
+}
+
+function toolNav(path, el) {
+  if (el) {
+    document.querySelectorAll('#toolSidebar .sb-item').forEach(i => i.classList.remove('active'));
+    el.classList.add('active');
+  }
+  const frame = document.getElementById('mainFrame');
+
+  // 개발자 로그인 시 ?dev=1 파라미터 추가
+  const role = sessionStorage.getItem('userRole') || '';
+  const devParam = role === 'dev' ? (path.includes('?') ? '&dev=1' : '?dev=1') : '';
+  frame.src = path + devParam;
+
+  frame.onload = () => { if (typeof pushCSVToFrame === 'function') pushCSVToFrame(); };
+}
+
+// 외부 링크 → iframe으로만 표시
+function toolNavExternal(url, el) {
+  if (el) {
+    document.querySelectorAll('#toolSidebar .sb-item').forEach(i => i.classList.remove('active'));
+    el.classList.add('active');
+  }
+  const frame = document.getElementById('mainFrame');
+  frame.src = url;
+}
+
+// ── iframe 갱신 ────────────────────────────────────
+// 송출 포맷:
+//   월간 → ?type=monthly&period=26.04월
+//   주간 → ?type=weekly&period=260417
+//   직접 → ?type=direct&period=260415
+function updateFrame() {
+  const base = TAB_MAP[state.tab];
+  if (!base) return;
+  const periodParam = toPeriodParam(state.type, state.period);
+  const url = `${base}?type=${encodeURIComponent(state.type)}&period=${encodeURIComponent(periodParam)}`;
+  const frame = document.getElementById('mainFrame');
+  // onload 먼저 등록 후 src 설정 (이벤트 누락 방지)
+  frame.onload = () => {
+    try {
+      frame.contentWindow.postMessage({ type: 'SCRIPT_URL', url: SCRIPT_URL }, '*');
+    } catch(e) {}
+    if (typeof pushCSVToFrame === 'function') pushCSVToFrame();
+  };
+  frame.src = url;
+}
+
+// ── 헤더 날짜 ─────────────────────────────────────
+function updateHeader() {
+  const { type, period } = state;  // 헤더는 내부키 기준으로 읽기 편하게 표시
+  let label = '';
+  if (type === 'yearly') {
+    label = `${period}년 연간`;
+  } else if (type === 'monthly') {
+    const [y, m] = period.split('-');
+    label = `${y}년 기준 · ${parseInt(m)}월 마감`;
+  } else if (type === 'weekly') {
+    const fri = new Date(period);
+    const { sat } = weekRange(fri);
+    label = `주간 · ${toDisplay(sat)} ~ ${toDisplay(fri)}`;
+  } else if (type === 'direct') {
+    label = `직접선택 · ${period}`;
+  }
+  const now = new Date();
+  document.getElementById('headerDate').textContent =
+    `${label} · ${now.getFullYear()}.${pad(now.getMonth()+1)}.${pad(now.getDate())}`;
+}
+
+// ── 초기화 ─────────────────────────────────────────
+function init() {
+  renderMonthly();
+  renderWeekly();
+
+  // 기본 탭: AI보고 → switchTab으로 처리해서 사이드바까지 정상 표시
+  const aiTab = document.querySelector('.tab[data-tab="AI보고"]');
+  if (aiTab) switchTab(aiTab);
+
+  // 주간 모드로 설정 + 최신 주차 선택
+  state.type = 'weekly';
+  const fri    = thisWeekFriday();
+  const friKey = toKey(fri);
+  state.period = friKey;
+
+  // 주간 목록에서 해당 항목 active 표시
+  document.querySelectorAll('#weeklyList .sb-item').forEach(el => {
+    el.classList.toggle('active', el.dataset.period === friKey);
+  });
+
+  // 주간 목록 펼치기 (open 클래스)
+  const weeklyList = document.getElementById('weeklyList');
+  if (weeklyList) weeklyList.style.display = 'block';
+
+  updateHeader();
+  updateFrame();
+}
+
+
+// ── 계정 정보 ──────────────────────────────────────
+const ACCOUNTS = {
+  '리더급':    { pw: 'rnjsaltnr', role: 'leader' },
+  '꿈비':      { pw: 'hihi00',    role: 'ggumbi' },
+  '에르모어':  { pw: 'dpfmahdj', role: 'ermore' },
+  '개발자모드': { pw: 'tladntmd', role: 'dev' },
+};
+
+// 역할별 허용 탭 목록 (null = 전체허용)
+const ROLE_TABS = {
+  'leader': ['AI보고','상담분석','주요kpi','상담실적','반품현황','처리현황','품질관리','건별보고','팀Tool'],
+  'ggumbi': ['AI보고','상담분석','주요kpi','상담실적','반품현황','처리현황','품질관리','건별보고','팀Tool'],
+  'ermore': ['팀Tool'],
+  'dev':    null,
+};
+
+function applyRolePermissions(role) {
+  const allowed = ROLE_TABS[role];
+  document.querySelectorAll('.tab').forEach(tab => {
+    const tabName = tab.dataset.tab;
+    const hasAccess = allowed === null || allowed.includes(tabName);
+    // 에르모어는 탭 숨김 X, 스타일만 흐리게
+    if (role === 'ermore' && !hasAccess) {
+      tab.style.opacity = '0.45';
+      tab.style.cursor  = 'default';
+    } else if (!hasAccess) {
+      tab.style.display = 'none';
+    } else {
+      tab.style.display = '';
+      tab.style.opacity = '';
+      tab.style.cursor  = '';
+    }
+  });
+
+  // 에르모어: 팀Tool로 바로 이동
+  if (role === 'ermore') {
+    const toolTab = document.querySelector('.tab[data-tab="팀Tool"]');
+    if (toolTab) switchTab(toolTab);
+  }
+}
+
+// 권한 없는 페이지 메시지 표시
+function showNoPermission(tabName) {
+  const frame = document.getElementById('mainFrame');
+  if (!frame) return;
+  // iframe 대신 부모에 메시지 레이어 표시
+  let layer = document.getElementById('noPermLayer');
+  if (!layer) {
+    layer = document.createElement('div');
+    layer.id = 'noPermLayer';
+    layer.style.cssText = `
+      position:absolute; inset:0; z-index:10;
+      background:#f0f2f5;
+      display:flex; flex-direction:column;
+      align-items:center; justify-content:center;
+      gap:12px;
+    `;
+    frame.parentNode.style.position = 'relative';
+    frame.parentNode.appendChild(layer);
+  }
+  layer.innerHTML = `
+    <div style="font-size:40px;">🔒</div>
+    <div style="font-size:16px;font-weight:600;color:#1a2e50;">${tabName} 메뉴</div>
+    <div style="font-size:13px;color:#666;text-align:center;line-height:1.8;">
+      현재 계정은 이 메뉴에 접근 권한이 없습니다.<br>
+      <span style="color:#4a9fd4;">팀Tool</span> 메뉴를 이용해 주세요.
+    </div>
+  `;
+  layer.style.display = 'flex';
+  frame.style.display = 'none';
+}
+
+function hideNoPermission() {
+  const layer = document.getElementById('noPermLayer');
+  const frame = document.getElementById('mainFrame');
+  if (layer) layer.style.display = 'none';
+  if (frame) frame.style.display = 'block';
+}
+
+const REMEMBER_KEY = 'ggumbi_remember';
+let rememberChecked = false;
+
+function toggleRemember() {
+  rememberChecked = !rememberChecked;
+  const box  = document.getElementById('rememberChk');
+  const mark = document.getElementById('chkMark');
+  if (box)  box.classList.toggle('checked', rememberChecked);
+  if (mark) mark.style.display = rememberChecked ? 'block' : 'none';
+}
+
+function tryLogin() {
+  const id    = document.getElementById('loginId').value;
+  const pw    = document.getElementById('loginPw').value;
+  const errEl = document.getElementById('loginError');
+
+  const account = ACCOUNTS[id];
+  if (!account || account.pw !== pw) {
+    errEl.textContent = '아이디 또는 비밀번호가 올바르지 않습니다.';
+    document.getElementById('loginPw').value = '';
+    document.getElementById('loginPw').focus();
+    return;
+  }
+
+  // 기억하기 체크 시 localStorage에 저장
+  if (rememberChecked) {
+    localStorage.setItem(REMEMBER_KEY, JSON.stringify({ id, pw }));
+  } else {
+    localStorage.removeItem(REMEMBER_KEY);
+  }
+
+  // 로그인 성공
+  sessionStorage.setItem('loggedIn', '1');
+  sessionStorage.setItem('userId', id);
+  sessionStorage.setItem('userRole', account.role);
+  document.getElementById('loginOverlay').style.display = 'none';
+  errEl.textContent = '';
+
+  const btn = document.querySelector('.logout-btn');
+  if (btn) btn.textContent = `🔒 ${id} · 로그아웃`;
+
+  applyRolePermissions(account.role);
+}
+
+function doLogout() {
+  sessionStorage.removeItem('loggedIn');
+  sessionStorage.removeItem('userId');
+  sessionStorage.removeItem('userRole');
+  document.getElementById('loginOverlay').style.display = 'flex';
+  document.getElementById('loginPw').value = '';
+  document.getElementById('loginError').textContent = '';
+  document.getElementById('loginPw').focus();
+}
+
+// ── 세션/기억 체크 ─────────────────────────────────
+(function checkSession() {
+  // 1. 세션 살아있으면 바로 진입
+  if (sessionStorage.getItem('loggedIn') === '1') {
+    document.getElementById('loginOverlay').style.display = 'none';
+    const id  = sessionStorage.getItem('userId') || '';
+    const btn = document.querySelector('.logout-btn');
+    if (btn && id) btn.textContent = `🔒 ${id} · 로그아웃`;
+    return;
+  }
+
+  // 1-1. 세션 복원 시 권한 재적용
+  const savedRole = sessionStorage.getItem('userRole');
+  if (savedRole) {
+    setTimeout(() => applyRolePermissions(savedRole), 0);
+  }
+
+  // 2. 기억된 로그인 정보 불러오기
+  try {
+    const saved = localStorage.getItem(REMEMBER_KEY);
+    if (saved) {
+      const { id, pw } = JSON.parse(saved);
+      const sel = document.getElementById('loginId');
+      const pwEl = document.getElementById('loginPw');
+      if (sel)  sel.value  = id;
+      if (pwEl) pwEl.value = pw;
+      // 체크박스 ON 표시
+      rememberChecked = true;
+      const box  = document.getElementById('rememberChk');
+      const mark = document.getElementById('chkMark');
+      if (box)  box.classList.add('checked');
+      if (mark) mark.style.display = 'block';
+    }
+  } catch(e) {}
+})();
+
+init();
+
+// ═══════════════════════════════════════════════════
+//  팀Tool CSV 데이터 공급자
+//  switchTab / toolNav 는 위에서 이미 정의되어 있으므로
+//  여기서는 CSV 로드 함수만 정의하고
+//  switchTab / toolNav 안에서 직접 호출
+// ═══════════════════════════════════════════════════
+
+const toolDataChannel = new BroadcastChannel('as-tool-channel-v1');
+
+const isLocal = location.hostname === 'localhost' || location.hostname === '127.0.0.1';
+const CSV_URL = '/dashboard/data/가전마감.csv';
+
+let csvCache = null;
+let csvETag  = null;
+
+function indexParseCSV(text) {
+  const rows = [];
+  let row = [], cur = '', inQ = false;
+  for (let i = 0; i < text.length; i++) {
+    const c = text[i], nc = text[i+1];
+    if (c === '"' && nc === '"')              { cur += '"'; i++; }
+    else if (c === '"')                        { inQ = !inQ; }
+    else if (c === ',' && !inQ)               { row.push(cur.trim()); cur = ''; }
+    else if ((c === '\n' || c === '\r') && !inQ) {
+      if (c === '\r' && nc === '\n') i++;
+      row.push(cur.trim()); rows.push(row); row = []; cur = '';
+    } else { cur += c; }
+  }
+  if (cur || row.length) { row.push(cur.trim()); rows.push(row); }
+  return rows;
+}
+
+async function loadAndBroadcastCSV(force = false) {
+  try {
+    if (!force && csvCache) {
+      const h = await fetch(CSV_URL, { method: 'HEAD', cache: 'no-cache' });
+      const et = h.headers.get('ETag') || h.headers.get('Last-Modified') || '';
+      if (et && et === csvETag) return;
+      csvETag = et;
+    }
+    const res = await fetch(CSV_URL, { cache: 'no-cache' });
+    if (!res.ok) throw new Error(res.status);
+    csvETag  = res.headers.get('ETag') || res.headers.get('Last-Modified') || String(Date.now());
+    csvCache = indexParseCSV(await res.text());
+
+    toolDataChannel.postMessage({ type: 'CSV_DATA', rows: csvCache, loadedAt: new Date().toISOString() });
+    pushCSVToFrame();
+    console.log('[index] CSV 송출:', csvCache.length - 1, '행');
+  } catch(e) { console.warn('[index] CSV 로드 실패:', e.message); }
+}
+
+function pushCSVToFrame() {
+  if (!csvCache) return;
+  const frame = document.getElementById('mainFrame');
+  if (!frame || !frame.contentWindow) return;
+  try {
+    frame.contentWindow.postMessage({ type: 'CSV_DATA', rows: csvCache, loadedAt: new Date().toISOString() }, '*');
+  } catch(e) {}
+}
+
+// BroadcastChannel 릴레이 (AS1→AS3 등 툴간 연동)
+toolDataChannel.addEventListener('message', (e) => {
+  const d = e.data || {};
+  if (d.type === 'CSV_DATA') return; // 루프 방지
+  const frame = document.getElementById('mainFrame');
+  if (frame && frame.contentWindow) {
+    try { frame.contentWindow.postMessage(d, '*'); } catch(e) {}
+  }
+});
+
+// 5분마다 ETag 폴링
+setInterval(() => { if (state.tab === '팀Tool') loadAndBroadcastCSV(false); }, 5 * 60 * 1000);
+</script>
+
+</body>
+</html>
