@@ -67,7 +67,7 @@ body { background: #1a2e50; font-family: 'Malgun Gothic', '맑은 고딕', sans-
 .nav-item.active { color: #5bb8f5; font-weight: 700; background: #162640; }
 .nav-item .nav-item-label { flex: 1; }
 
-/* 공개설정 버튼 (관리자 전용) */
+/* 편집권한 설정 버튼 (관리자 전용) */
 .vis-btn {
   display: none; /* 기본 숨김, 관리자일 때만 표시 */
   align-items: center; gap: 3px;
@@ -96,7 +96,7 @@ body { background: #1a2e50; font-family: 'Malgun Gothic', '맑은 고딕', sans-
 
 .main { display: flex; flex: 1; overflow: hidden; }
 
-/* ── 공개설정 팝업 ── */
+/* ── 편집권한 설정 팝업 ── */
 #visModal {
   display: none;
   position: fixed; inset: 0; z-index: 2000;
@@ -128,8 +128,8 @@ body { background: #1a2e50; font-family: 'Malgun Gothic', '맑은 고딕', sans-
   font-size: 10.5px; padding: 2px 8px; border-radius: 10px;
   font-weight: 600;
 }
-.badge-open { background: #1a3a1a; color: #5be87a; border: 1px solid #2a5a2a; }
-.badge-hidden { background: #3a1a1a; color: #e87a7a; border: 1px solid #6a2a2a; }
+.badge-edit { background: #1a3a1a; color: #5be87a; border: 1px solid #2a5a2a; }
+.badge-read { background: #3a1a1a; color: #e87a7a; border: 1px solid #6a2a2a; }
 .vis-role-row .vis-toggle {
   background: none; border: 1px solid #2a4060; color: #7a9ec0;
   border-radius: 4px; padding: 3px 10px; font-size: 11px;
@@ -397,11 +397,11 @@ body { background: #1a2e50; font-family: 'Malgun Gothic', '맑은 고딕', sans-
   </div>
 </div>
 
-<!-- ── 공개설정 모달 ── -->
+<!-- ── 편집권한 설정 모달 ── -->
 <div id="visModal">
   <div class="vis-modal-box">
-    <div class="vis-modal-title" id="visModalTitle">공개설정</div>
-    <div class="vis-modal-sub">열람 권한을 설정합니다. 비공개 시 해당 등급 이하에서는 잠금 화면이 표시됩니다.</div>
+    <div class="vis-modal-title" id="visModalTitle">편집권한 설정</div>
+    <div class="vis-modal-sub">편집 권한을 설정합니다. 읽기 전용으로 설정된 등급은 사이드바 클릭 시 권한 안내 팝업이 표시됩니다.</div>
     <div class="vis-role-list" id="visRoleList"></div>
     <div class="vis-modal-footer">
       <button class="vis-cancel-btn" onclick="closeVisModal()">닫기</button>
@@ -487,9 +487,9 @@ body { background: #1a2e50; font-family: 'Malgun Gothic', '맑은 고딕', sans-
       팀Tool ✓
     </div>
   </div>
-  <div class="nav-group" id="ng-dev">
-    <div class="nav-parent" data-tab="개발자" onclick="switchTabDirect('개발자')" style="cursor:pointer;">
-      개발자
+  <div class="nav-group" id="ng-admin">
+    <div class="nav-parent" data-tab="관리자" onclick="switchTabDirect('관리자')" style="cursor:pointer;">
+      관리자
     </div>
   </div>
 
@@ -587,7 +587,7 @@ const TAB_MAP = {
   'AI보고':     'report/ai보고.html',
   '상담분석':   'report/채널톡보고.html',
   '팀Tool':     'report/팀Tool.html',
-  '개발자':     'developer/account.html',
+  '관리자':     'developer/account.html',
 };
 
 // ── 계정 정보 ──
@@ -605,12 +605,12 @@ const ROLE_LEVEL = { admin: 0, leader: 1, ggumbi: 2, affiliate: 3 };
 // ── 역할별 기본 허용 탭 (null = 전체허용) ──
 const ROLE_TABS = {
   'admin':     null,
-  'leader':    ['AI보고','상담분석','주요kpi','상담실적','반품현황','처리현황','품질관리','건별Issue','건별보고','팀Tool','개발자'],
+  'leader':    ['AI보고','상담분석','주요kpi','상담실적','반품현황','처리현황','품질관리','건별Issue','건별보고','팀Tool','관리자'],
   'ggumbi':    ['AI보고','상담분석','주요kpi','상담실적','반품현황','처리현황','품질관리','건별Issue','건별보고','팀Tool'],
   'affiliate': ['팀Tool'],
 };
 
-// ── 공개설정: 각 탭별로 어느 role까지 비공개 처리할지
+// ── 편집권한 설정: 각 탭별로 어느 role까지 비공개 처리할지
 // 예) '상담실적': ['affiliate'] → affiliate 이하는 비공개
 // 값: 비공개 처리할 role 배열 (GAS에서 로드)
 let VIS_SETTINGS = {};   // { '탭명': ['role1','role2',...] }
@@ -753,7 +753,7 @@ function applyRolePermissions(role) {
   // 개발자탭 (nav-parent 단독)
   const devNG = document.getElementById('ng-dev');
   if (devNG) {
-    devNG.style.display = (allowed === null || allowed.includes('개발자')) ? '' : 'none';
+    devNG.style.display = (allowed === null || allowed.includes('관리자')) ? '' : 'none';
   }
 
   // 계열사: 팀Tool로 바로 이동
@@ -765,7 +765,7 @@ function applyRolePermissions(role) {
 }
 
 // ═══════════════════════════════════════════
-//  공개설정 (VIS) - GAS 연동
+//  편집권한 설정 (VIS) - GAS 연동
 // ═══════════════════════════════════════════
 const VIS_SHEET = '페이지열람권한';
 
@@ -903,7 +903,7 @@ async function saveVisToGAS() {
   }
 }
 
-// 공개설정 버튼 상태 갱신
+// 편집권한 설정 버튼 상태 갱신
 function updateVisBtnDisplay() {
   document.querySelectorAll('.vis-btn').forEach(btn => {
     const tab       = btn.dataset.tab;
@@ -912,22 +912,66 @@ function updateVisBtnDisplay() {
     btn.classList.toggle('restricted', hasHidden);
     // 버튼에 현재 설정 요약 표시
     if (hasHidden) {
-      btn.title = `비공개: ${hidden.join(', ')}`;
+      btn.title = `읽기 전용: ${hidden.join(', ')}`;
       btn.textContent = '🔒';
     } else {
-      btn.title = '공개설정';
+      btn.title = '편집권한 설정';
       btn.textContent = '⚙';
     }
   });
 }
 
-// 현재 탭에 접근 권한이 있는지 확인 (VIS_SETTINGS 기준)
+// 현재 탭이 편집 가능한지 확인 (VIS_SETTINGS 기준)
+// VIS_SETTINGS[탭명] 에 role이 있으면 → 읽기 전용(편집 불가)
 function hasVisAccess(tabName, role) {
-  const hidden = VIS_SETTINGS[tabName] || [];
-  return !hidden.includes(role);
+  const readOnly = VIS_SETTINGS[tabName] || [];
+  return !readOnly.includes(role); // true = 편집 가능, false = 읽기 전용
 }
 
-// ── 공개설정 모달 ──
+// 현재 role이 tabName에 대해 읽기 전용인지 확인
+function isReadOnly(tabName, role) {
+  const readOnly = VIS_SETTINGS[tabName] || [];
+  return readOnly.includes(role);
+}
+
+// ── 편집권한 부족 팝업 ──
+function showEditPermPopup() {
+  // 이미 떠있으면 스킵
+  if (document.getElementById('editPermPopup')) return;
+  const popup = document.createElement('div');
+  popup.id = 'editPermPopup';
+  popup.style.cssText = `
+    position:fixed;top:50%;left:50%;transform:translate(-50%,-50%);
+    z-index:9999;background:#111e35;border:1px solid #4a9fd4;
+    border-radius:12px;padding:28px 32px;min-width:300px;text-align:center;
+    box-shadow:0 16px 40px rgba(0,0,0,0.7);
+    font-family:'Malgun Gothic',sans-serif;
+  `;
+  popup.innerHTML = `
+    <div style="font-size:32px;margin-bottom:12px;">🔒</div>
+    <div style="font-size:15px;font-weight:700;color:#c8ddf0;margin-bottom:8px;">편집 권한 없음</div>
+    <div style="font-size:12.5px;color:#7a9ec0;line-height:1.8;margin-bottom:18px;">
+      현재 계정은 이 페이지의 <strong style="color:#5bb8f5;">읽기 전용</strong> 권한을 가지고 있습니다.<br>
+      편집이 필요하면 관리자에게 문의해주세요.
+    </div>
+    <button onclick="document.getElementById('editPermPopup').remove()"
+      style="background:#2356a8;border:none;color:#fff;padding:8px 24px;border-radius:7px;
+             font-size:13px;font-weight:600;cursor:pointer;font-family:inherit;">
+      확인
+    </button>
+  `;
+  // 배경 클릭으로도 닫기
+  const overlay = document.createElement('div');
+  overlay.id = 'editPermOverlay';
+  overlay.style.cssText = 'position:fixed;inset:0;z-index:9998;background:rgba(0,0,0,0.4);';
+  overlay.onclick = () => { popup.remove(); overlay.remove(); };
+  document.body.appendChild(overlay);
+  document.body.appendChild(popup);
+  // 버튼 클릭 시 overlay도 제거
+  popup.querySelector('button').addEventListener('click', () => overlay.remove());
+}
+
+// ── 편집권한 설정 모달 ──
 let visCurrentTab = '';
 let visTempSettings = {}; // 모달 내 임시 상태
 
@@ -943,7 +987,7 @@ function openVisModal(evt, tabName) {
   visCurrentTab = tabName;
   visTempSettings = JSON.parse(JSON.stringify(VIS_SETTINGS[tabName] || []));
 
-  document.getElementById('visModalTitle').textContent = `⚙ 공개설정 — ${tabName}`;
+  document.getElementById('visModalTitle').textContent = `⚙ 편집권한 설정 — ${tabName}`;
 
   // 역할별 행 생성
   let html = '';
@@ -955,7 +999,7 @@ function openVisModal(evt, tabName) {
         <div class="role-name">${name}</div>
         <div style="font-size:10px;color:#4a6a8a;margin-top:2px;">${desc}</div>
       </div>
-      <span class="role-badge ${isHidden ? 'badge-hidden' : 'badge-open'}" id="vbadge-${role}">
+      <span class="role-badge ${isHidden ? 'badge-read' : 'badge-edit'}" id="vbadge-${role}">
         ${isHidden ? '비공개' : '공개'}
       </span>
       <button class="vis-toggle" id="vtoggle-${role}" onclick="toggleVisRole('${role}')">
@@ -976,7 +1020,7 @@ function toggleVisRole(role) {
   const badge  = document.getElementById(`vbadge-${role}`);
   const toggle = document.getElementById(`vtoggle-${role}`);
   const isHidden = visTempSettings.includes(role);
-  badge.className  = `role-badge ${isHidden ? 'badge-hidden' : 'badge-open'}`;
+  badge.className  = `role-badge ${isHidden ? 'badge-read' : 'badge-edit'}`;
   badge.textContent = isHidden ? '비공개' : '공개';
   toggle.textContent = isHidden ? '공개로 변경' : '비공개 설정';
 }
@@ -1039,29 +1083,32 @@ function switchTabDirect(tabName) {
 function _applyTab(tabName, role) {
   const allowed = ROLE_TABS[role];
 
-  // 기본 권한 체크
+  // 기본 권한 체크 (아예 접근 불가)
   const hasRoleAccess = allowed === null || allowed.includes(tabName);
-  // 공개설정 체크
-  const hasVisAccess_ = hasVisAccess(tabName, role);
-
-  if (!hasRoleAccess || !hasVisAccess_) {
+  if (!hasRoleAccess) {
     showNoPermission(tabName);
     _switchSidebar(tabName);
     return;
   }
 
+  // 읽기 전용 여부 (접근은 되지만 편집 불가)
+  const readOnlyMode = isReadOnly(tabName, role);
+  // 세션에 현재 탭 읽기 전용 상태 저장 (사이드바 클릭 인터셉트용)
+  sessionStorage.setItem('currentTabReadOnly', readOnlyMode ? '1' : '0');
+  sessionStorage.setItem('currentTab', tabName);
+
   hideNoPermission();
   _switchSidebar(tabName);
 
   const isToolTab = tabName === '팀Tool';
-  const isDevTab  = tabName === '개발자';
+  const isDevTab  = tabName === '관리자';
   const isKpiTab  = tabName === '주요kpi';
   const isOnceTab = tabName === '건별보고' || tabName === '건별Issue';
 
   if (isOnceTab) {
     onceNav(TAB_MAP[tabName] || 'report/once/allstain.html', null);
   } else if (isDevTab) {
-    devNav('developer/account.html', null);
+    devNav('developer/account.html', null); // 관리자탭
   } else if (isToolTab) {
     openCodingRequest(null);   // 팀Tool 진입 시 코딩요청 카드 기본 표시
     renderDynamicSidebar('팀Tool'); // GAS에서 사이드바 동적 로드
@@ -1102,7 +1149,7 @@ function _applyTab(tabName, role) {
 
 function _switchSidebar(tabName) {
   const isToolTab = tabName === '팀Tool';
-  const isDevTab  = tabName === '개발자';
+  const isDevTab  = tabName === '관리자';
   const isOnceTab = tabName === '건별보고' || tabName === '건별Issue';
   document.getElementById('dashSidebar').style.display = (isToolTab || isOnceTab || isDevTab) ? 'none' : 'block';
   document.getElementById('toolSidebar').style.display = isToolTab ? 'block' : 'none';
@@ -1139,6 +1186,16 @@ function hideNoPermission() {
   if (frame) frame.style.display = 'block';
 }
 
+// ── 읽기 전용 인터셉트 헬퍼 ──
+// 현재 탭이 읽기 전용이면 팝업만 띄우고 true 반환, 아니면 false
+function _checkReadOnlyIntercept() {
+  if (sessionStorage.getItem('currentTabReadOnly') === '1') {
+    showEditPermPopup();
+    return true;
+  }
+  return false;
+}
+
 // ── 서브 네비 ──
 function devNav(path, el) {
   if (el) { document.querySelectorAll('#devSidebar .sb-item').forEach(i => i.classList.remove('active')); el.classList.add('active'); }
@@ -1165,10 +1222,12 @@ function devNav(path, el) {
   };
 }
 function onceNav(path, el) {
+  if (_checkReadOnlyIntercept()) return; // 읽기 전용 차단
   if (el) { document.querySelectorAll('#onceSidebar .sb-item').forEach(i => i.classList.remove('active')); el.classList.add('active'); }
   document.getElementById('mainFrame').src = path;
 }
 function toolNav(path, el) {
+  if (_checkReadOnlyIntercept()) return; // 읽기 전용 차단
   hideNoPermission(); // 코딩요청 카드 등 닫기
   if (el) { document.querySelectorAll('#toolSidebar .sb-item').forEach(i => i.classList.remove('active')); el.classList.add('active'); }
   const frame = document.getElementById('mainFrame');
@@ -1178,6 +1237,7 @@ function toolNav(path, el) {
   frame.onload = () => { if (typeof pushCSVToFrame === 'function') pushCSVToFrame(); };
 }
 function toolNavExternal(url, el) {
+  if (_checkReadOnlyIntercept()) return; // 읽기 전용 차단
   hideNoPermission(); // 코딩요청 카드 등 닫기
   if (el) { document.querySelectorAll('#toolSidebar .sb-item').forEach(i => i.classList.remove('active')); el.classList.add('active'); }
   document.getElementById('mainFrame').src = url;
