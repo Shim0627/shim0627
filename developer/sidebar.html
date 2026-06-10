@@ -223,20 +223,34 @@ body { background: #0d1825; color: #c8ddf0; font-family: 'Malgun Gothic', sans-s
 // ── GAS URL (index.html과 동일하게 부모에서 전달받거나 직접 지정) ──
 let SCRIPT_URL = '';
 
-// 부모(index.html) iframe postMessage로 URL을 받거나,
-// URL 파라미터로 직접 전달
-window.addEventListener('message', e => {
-  if (e.data && e.data.type === 'SCRIPT_URL') {
-    SCRIPT_URL = e.data.url;
+// ── SCRIPT_URL 초기화 (3가지 경로) ──
+// 1순위: URL 파라미터 ?gasUrl=...
+// 2순위: 부모로부터 postMessage
+// 3순위: 타임아웃 후 에러 표시
+
+(function init() {
+  // URL 파라미터 — URLSearchParams는 자동 디코딩하므로 추가 decode 불필요
+  const u = new URLSearchParams(location.search).get('gasUrl');
+  if (u && u.startsWith('http')) {
+    SCRIPT_URL = u;
     loadAll();
+    return;
+  }
+  // postMessage 대기
+  setTimeout(() => {
+    if (!SCRIPT_URL) {
+      setStatus('⚠ GAS URL을 받지 못했습니다. 인덱스에서 관리자 → 메뉴구성으로 진입해주세요', 'err');
+    }
+  }, 4000);
+})();
+
+// postMessage 수신 (iframe 환경)
+window.addEventListener('message', e => {
+  if (e.data && e.data.type === 'SCRIPT_URL' && e.data.url) {
+    SCRIPT_URL = e.data.url;
+    if (typeof loadAll === 'function') loadAll();
   }
 });
-
-const params = new URLSearchParams(location.search);
-if (params.get('gasUrl')) {
-  SCRIPT_URL = decodeURIComponent(params.get('gasUrl'));
-  loadAll();
-}
 
 // ── 상태 ──
 let allRows  = [];  // 전체 데이터
@@ -532,18 +546,6 @@ async function addNewTab() {
   }
 }
 
-// ── index.html 의 iframe 로드 시 SCRIPT_URL 받기 대기 ──
-// (페이지 직접 접근 시) URL 파라미터에서 받기
-(function() {
-  const u = new URLSearchParams(location.search).get('gasUrl');
-  if (u) { SCRIPT_URL = decodeURIComponent(u); loadAll(); }
-  else {
-    // 부모로부터 postMessage 대기 (3초)
-    setTimeout(() => {
-      if (!SCRIPT_URL) setStatus('⚠ GAS URL을 받지 못했습니다. 인덱스에서 개발자 → 메뉴구성으로 진입해주세요', 'err');
-    }, 3000);
-  }
-})();
 </script>
 </body>
 </html>

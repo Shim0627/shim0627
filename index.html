@@ -1200,24 +1200,30 @@ function _checkReadOnlyIntercept() {
 function devNav(path, el) {
   if (el) { document.querySelectorAll('#devSidebar .sb-item').forEach(i => i.classList.remove('active')); el.classList.add('active'); }
   const role = sessionStorage.getItem('userRole') || '';
-  const readOnly = role === 'leader' ? '?readonly=1' : '';
   const frame = document.getElementById('mainFrame');
-  // sidebar.html에 GAS URL을 파라미터로 전달
-  const sep = path.includes('?') ? '&' : '?';
-  const gasParam = path.includes('sidebar.html')
-    ? `${sep}gasUrl=${encodeURIComponent(SCRIPT_URL)}`
-    : '';
-  frame.src = path + readOnly + gasParam;
+
+  // URL 파라미터를 객체로 조립
+  const urlParams = {};
+  if (role === 'leader')               urlParams.readonly = '1';
+  if (path.includes('sidebar.html'))   urlParams.gasUrl   = SCRIPT_URL;
+
+  let finalUrl = path;
+  const keys = Object.keys(urlParams);
+  if (keys.length) {
+    const qs = keys.map(k => `${encodeURIComponent(k)}=${encodeURIComponent(urlParams[k])}`).join('&');
+    finalUrl = path + '?' + qs;
+  }
+
+  frame.src = finalUrl;
   frame.onload = () => {
-    // SCRIPT_URL을 postMessage로도 전달 (이중 보장)
+    // postMessage로도 이중 전달 (same-origin 한정이지만 fallback)
     try { frame.contentWindow.postMessage({ type: 'SCRIPT_URL', url: SCRIPT_URL }, '*'); } catch(e) {}
-    // sidebar.html에서 돌아올 때 캐시 무효화 리스너
     if (path.includes('sidebar.html')) {
       window.addEventListener('message', function onSidebarSave(ev) {
         if (ev.data && ev.data.type === 'SIDEBAR_UPDATED') {
           invalidateSidebarCache(ev.data.tab || null);
         }
-      }, { once: false });
+      });
     }
   };
 }
