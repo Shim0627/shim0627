@@ -16,23 +16,140 @@ body { background: #1a2e50; font-family: 'Malgun Gothic', '맑은 고딕', sans-
 .header-title { font-size: 15px; font-weight: 700; letter-spacing: 0.5px; }
 .header-date { font-size: 11px; color: #8aaccc; }
 
-.tabs {
-  display: flex; align-items: center; background: #1a2e50;
-  padding: 0 20px; height: 38px; flex-shrink: 0;
-  gap: 2px; border-bottom: 2px solid #243d6a;
+/* ── 드롭다운 네비게이션 ── */
+.nav-bar {
+  display: flex; align-items: stretch; background: #1a2e50;
+  padding: 0 16px; height: 42px; flex-shrink: 0;
+  gap: 0; border-bottom: 2px solid #243d6a;
+  position: relative; z-index: 500;
 }
-.tab {
-  padding: 0 16px; height: 38px; display: flex; align-items: center;
-  font-size: 12.5px; color: #8aaccc; cursor: pointer;
+
+/* 대분류 */
+.nav-group {
+  position: relative;
+  display: flex; align-items: stretch;
+}
+
+.nav-parent {
+  display: flex; align-items: center; gap: 6px;
+  padding: 0 16px; height: 42px;
+  font-size: 13px; font-weight: 600; color: #8aaccc;
+  cursor: pointer; user-select: none; white-space: nowrap;
   border-bottom: 3px solid transparent;
   transition: color 0.15s, border-color 0.15s;
-  white-space: nowrap; user-select: none;
 }
-.tab:hover { color: #c8ddf0; }
-.tab.active { color: #fff; border-bottom-color: #4a9fd4; font-weight: 600; }
+.nav-parent:hover, .nav-group:hover .nav-parent { color: #fff; border-bottom-color: #4a9fd4; }
+.nav-parent.has-active { color: #fff; border-bottom-color: #4a9fd4; }
+.nav-parent .nav-arrow { font-size: 9px; color: #5a7a9a; transition: transform 0.2s; }
+.nav-group:hover .nav-parent .nav-arrow { transform: rotate(180deg); }
+
+/* 드롭다운 패널 */
+.nav-dropdown {
+  display: none;
+  position: absolute; top: 100%; left: 0;
+  background: #111e35; border: 1px solid #2a4060;
+  border-top: 2px solid #4a9fd4;
+  border-radius: 0 0 8px 8px;
+  min-width: 160px; padding: 6px 0;
+  box-shadow: 0 8px 24px rgba(0,0,0,0.4);
+  z-index: 600;
+}
+.nav-group:hover .nav-dropdown { display: block; }
+
+/* 하위 탭 아이템 */
+.nav-item {
+  display: flex; align-items: center; justify-content: space-between;
+  padding: 8px 16px; font-size: 12.5px; color: #a8c4df;
+  cursor: pointer; transition: background 0.1s, color 0.1s;
+  white-space: nowrap; gap: 8px;
+}
+.nav-item:hover { background: #1a2e4a; color: #e0eefc; }
+.nav-item.active { color: #5bb8f5; font-weight: 700; background: #162640; }
+.nav-item .nav-item-label { flex: 1; }
+
+/* 공개설정 버튼 (관리자 전용) */
+.vis-btn {
+  display: none; /* 기본 숨김, 관리자일 때만 표시 */
+  align-items: center; gap: 3px;
+  background: #1a3a5a; border: 1px solid #2a5070;
+  border-radius: 4px; padding: 2px 7px;
+  font-size: 10px; color: #7ab8e0; cursor: pointer;
+  transition: background 0.15s, color 0.15s;
+  white-space: nowrap; flex-shrink: 0;
+}
+.vis-btn:hover { background: #2a4e6a; color: #b0d8f5; }
+.vis-btn.restricted { background: #3a1a1a; border-color: #6a2a2a; color: #e87a7a; }
+.vis-btn.restricted:hover { background: #4a2020; color: #f09090; }
+.admin-mode .vis-btn { display: flex; }
+
+/* 우측 버튼들 */
+.nav-right {
+  margin-left: auto; display: flex; align-items: center; gap: 8px;
+}
+.test-server-btn {
+  height: 26px; display: flex; align-items: center; gap: 6px;
+  background: #1e4a2a; border: 1px solid #2e7a3e; color: #5be87a;
+  padding: 0 12px; border-radius: 4px; font-size: 12px; font-weight: 600;
+  cursor: pointer; font-family: inherit; white-space: nowrap; transition: background 0.15s;
+}
+.test-server-btn:hover { background: #256032; }
 
 .main { display: flex; flex: 1; overflow: hidden; }
 
+/* ── 공개설정 팝업 ── */
+#visModal {
+  display: none;
+  position: fixed; inset: 0; z-index: 2000;
+  background: rgba(0,0,0,0.5);
+  align-items: center; justify-content: center;
+}
+#visModal.open { display: flex; }
+.vis-modal-box {
+  background: #1a2e50; border: 1px solid #2a4060;
+  border-radius: 12px; padding: 28px 28px 24px;
+  width: 380px; max-width: 95vw;
+  box-shadow: 0 16px 40px rgba(0,0,0,0.6);
+}
+.vis-modal-title {
+  font-size: 15px; font-weight: 700; color: #e0eefc;
+  margin-bottom: 6px;
+}
+.vis-modal-sub {
+  font-size: 11px; color: #5a7a9a; margin-bottom: 20px; line-height: 1.6;
+}
+.vis-role-list { display: flex; flex-direction: column; gap: 8px; margin-bottom: 22px; }
+.vis-role-row {
+  display: flex; align-items: center; justify-content: space-between;
+  background: #111e35; border-radius: 6px; padding: 10px 14px;
+  border: 1px solid #2a4060;
+}
+.vis-role-row .role-name { font-size: 12.5px; color: #a8c4df; }
+.vis-role-row .role-badge {
+  font-size: 10.5px; padding: 2px 8px; border-radius: 10px;
+  font-weight: 600;
+}
+.badge-open { background: #1a3a1a; color: #5be87a; border: 1px solid #2a5a2a; }
+.badge-hidden { background: #3a1a1a; color: #e87a7a; border: 1px solid #6a2a2a; }
+.vis-role-row .vis-toggle {
+  background: none; border: 1px solid #2a4060; color: #7a9ec0;
+  border-radius: 4px; padding: 3px 10px; font-size: 11px;
+  cursor: pointer; font-family: inherit; transition: all 0.15s;
+}
+.vis-role-row .vis-toggle:hover { background: #1a2e4a; color: #e0eefc; }
+.vis-modal-footer { display: flex; justify-content: flex-end; gap: 8px; }
+.vis-save-btn {
+  background: #2356a8; border: none; color: #fff;
+  padding: 8px 20px; border-radius: 6px; font-size: 13px;
+  font-weight: 600; cursor: pointer; font-family: inherit;
+  transition: background 0.15s;
+}
+.vis-save-btn:hover { background: #1a3a7a; }
+.vis-cancel-btn {
+  background: #1a2e4a; border: 1px solid #2a4060; color: #8aaccc;
+  padding: 8px 16px; border-radius: 6px; font-size: 13px;
+  cursor: pointer; font-family: inherit; transition: background 0.15s;
+}
+.vis-cancel-btn:hover { background: #223650; color: #e0eefc; }
 
 /* ── 로그인 오버레이 ── */
 #loginOverlay {
@@ -48,11 +165,10 @@ body { background: #1a2e50; font-family: 'Malgun Gothic', '맑은 고딕', sans-
 .login-logo { text-align: center; margin-bottom: 32px; }
 .login-logo .logo-icon {
   width: 56px; height: 56px; border-radius: 50%;
-  background: #2356a8;
-  margin: 0 auto 14px;
+  background: #2356a8; margin: 0 auto 14px;
   display: flex; align-items: center; justify-content: center;
 }
-.login-logo .logo-icon i { font-size: 26px; color: #fff; }
+.login-logo .logo-icon span { font-size: 26px; color: #fff; }
 .login-logo .logo-title { font-size: 20px; font-weight: 500; color: #e0eefc; letter-spacing: 1px; }
 .login-logo .logo-sub   { font-size: 12px; color: #5a7a9a; margin-top: 5px; letter-spacing: 0.5px; }
 .login-field { margin-bottom: 16px; }
@@ -75,6 +191,12 @@ body { background: #1a2e50; font-family: 'Malgun Gothic', '맑은 고딕', sans-
   appearance: none; -webkit-appearance: none; -moz-appearance: none;
   padding-right: 36px; cursor: pointer;
 }
+/* 계열사 PW 안내 */
+.pw-hint {
+  font-size: 11px; color: #4fc3f7; margin-top: 5px;
+  padding: 5px 10px; background: #0e2040; border-radius: 5px;
+  border-left: 3px solid #4fc3f7; display: none;
+}
 .login-remember {
   display: flex; align-items: center; gap: 8px;
   margin-bottom: 22px; cursor: pointer;
@@ -86,8 +208,8 @@ body { background: #1a2e50; font-family: 'Malgun Gothic', '맑은 고딕', sans-
   flex-shrink: 0; transition: background 0.15s, border-color 0.15s;
 }
 .login-remember .chk-box.checked { background: #2356a8; border-color: #4a9fd4; }
-.login-remember .chk-box i { font-size: 12px; color: #fff; display: none; }
-.login-remember .chk-box.checked i { display: block; }
+.login-remember .chk-box span { font-size: 12px; color: #fff; display: none; }
+.login-remember .chk-box.checked span { display: block; }
 .login-remember span { font-size: 12px; color: #7a9ec0; }
 .login-btn {
   width: 100%; background: #2356a8; border: none; color: #fff;
@@ -95,10 +217,7 @@ body { background: #1a2e50; font-family: 'Malgun Gothic', '맑은 고딕', sans-
   border-radius: 8px; cursor: pointer; font-family: inherit; transition: background 0.15s;
 }
 .login-btn:hover { background: #1a3a7a; }
-.login-error {
-  color: #e87a7a; font-size: 11.5px; text-align: center;
-  margin-top: 10px; min-height: 18px;
-}
+.login-error { color: #e87a7a; font-size: 11.5px; text-align: center; margin-top: 10px; min-height: 18px; }
 .login-footer { text-align: center; font-size: 11px; color: #3a5a7a; margin-top: 20px; }
 
 /* ── 사이드바 ── */
@@ -124,31 +243,23 @@ body { background: #1a2e50; font-family: 'Malgun Gothic', '맑은 고딕', sans-
 .sb-item.sub:hover { color: #e0eefc; background: #1a2e4a; }
 .sb-item.sub.active { color: #5bb8f5; font-weight: 700; background: #162640; }
 .sb-item.off { color: #2e4460 !important; cursor: default; pointer-events: none; }
-
 .now-dot {
   display: inline-block; width: 6px; height: 6px;
   border-radius: 50%; background: #5bb8f5;
   margin-left: 5px; vertical-align: middle;
 }
 .week-range { font-size: 10px; color: #6a8faa; display: block; padding-left: 4px; }
-
-/* 주간 토글 버튼 */
 .sb-toggle {
   padding: 6px 16px; font-size: 12.5px; color: #a8c4df;
-  cursor: pointer; display: flex; align-items: center;
-  justify-content: space-between;
+  cursor: pointer; display: flex; align-items: center; justify-content: space-between;
   transition: color 0.1s, background 0.1s;
 }
 .sb-toggle:hover { background: #1a2e4a; color: #e0eefc; }
 .arrow { font-size: 9px; transition: transform 0.2s; display: inline-block; }
 .arrow.open { transform: rotate(180deg); }
-
 .weekly-list { display: none; }
 .weekly-list.open { display: block; }
-
-/* 직접선택 달력 */
 .date-pick-wrap { padding: 4px 16px 8px; }
-
 .cal-toggle-btn {
   width: 100%; background: #1a2e4a; border: 1px solid #2a4060;
   color: #a8c4df; padding: 5px 8px; font-size: 11.5px;
@@ -157,36 +268,22 @@ body { background: #1a2e50; font-family: 'Malgun Gothic', '맑은 고딕', sans-
   justify-content: space-between; align-items: center;
 }
 .cal-toggle-btn:hover { border-color: #5bb8f5; color: #e0eefc; }
-
 .cal-popup {
   display: none; background: #0e1a2e;
   border: 1px solid #2a4060; border-radius: 5px;
   padding: 8px 6px; margin-top: 4px; user-select: none;
 }
 .cal-popup.open { display: block; }
-
-.cal-nav {
-  display: flex; align-items: center; justify-content: space-between;
-  margin-bottom: 6px; padding: 0 2px;
-}
-.cal-nav-btn {
-  background: none; border: none; color: #7a9ec0;
-  cursor: pointer; font-size: 13px; padding: 2px 6px; border-radius: 3px;
-}
+.cal-nav { display: flex; align-items: center; justify-content: space-between; margin-bottom: 6px; padding: 0 2px; }
+.cal-nav-btn { background: none; border: none; color: #7a9ec0; cursor: pointer; font-size: 13px; padding: 2px 6px; border-radius: 3px; }
 .cal-nav-btn:hover { background: #1a2e4a; color: #e0eefc; }
 .cal-month-label { font-size: 11.5px; font-weight: 700; color: #c8ddf0; }
-
 .cal-dow { display: grid; grid-template-columns: repeat(7, 1fr); margin-bottom: 2px; }
 .cal-dow span { text-align: center; font-size: 9.5px; color: #4a6a8a; padding: 2px 0; }
 .cal-dow span:first-child { color: #7a3a3a; }
 .cal-dow span:last-child  { color: #3a5a8a; }
-
 .cal-grid { display: grid; grid-template-columns: repeat(7, 1fr); gap: 1px; }
-.cal-cell {
-  text-align: center; font-size: 10.5px; padding: 3px 1px;
-  border-radius: 2px; cursor: pointer; color: #8aaac8;
-  transition: background 0.1s, color 0.1s;
-}
+.cal-cell { text-align: center; font-size: 10.5px; padding: 3px 1px; border-radius: 2px; cursor: pointer; color: #8aaac8; transition: background 0.1s, color 0.1s; }
 .cal-cell.other-month { color: #2e4460; }
 .cal-cell.sun { color: #7a3a3a; }
 .cal-cell.sat { color: #3a5a8a; }
@@ -196,11 +293,8 @@ body { background: #1a2e50; font-family: 'Malgun Gothic', '맑은 고딕', sans-
 .cal-cell.week-selected.fri-end { background: #1a3a6a; color: #5bb8f5; font-weight: 700; }
 .cal-cell.empty { cursor: default; pointer-events: none; }
 .cal-cell.today-marker { outline: 1px solid #3a5a7a; }
-
 .cal-result { font-size: 10px; color: #5bb8f5; margin-top: 5px; padding-left: 2px; min-height: 14px; font-weight: 600; }
-
 .sb-divider { height: 1px; background: #1a2e4a; margin: 6px 16px; }
-
 .sb-logout { margin-top: auto; padding: 10px 16px; }
 .logout-btn {
   background: #1a2e4a; border: 1px solid #2a4060; color: #a8c4df;
@@ -210,18 +304,24 @@ body { background: #1a2e50; font-family: 'Malgun Gothic', '맑은 고딕', sans-
 .logout-btn:hover { background: #223650; color: #e0eefc; }
 
 /* iframe */
-.content { flex: 1; overflow: hidden; }
+.content { flex: 1; overflow: hidden; position: relative; }
 .content iframe { width: 100%; height: 100%; border: none; display: block; }
+
+/* 비공개 처리 레이어 */
+#noPermLayer {
+  position: absolute; inset: 0; z-index: 10;
+  background: #f0f2f5; display: none;
+  flex-direction: column; align-items: center; justify-content: center; gap: 12px;
+}
 </style>
 </head>
 <body>
-
 
 <!-- ── 로그인 오버레이 ── -->
 <div id="loginOverlay">
   <div class="login-box">
     <div class="login-logo">
-      <div class="logo-icon"><span style="font-size:26px;color:#fff;">♡</span></div>
+      <div class="logo-icon"><span>♡</span></div>
       <div class="logo-title">엄마감동팀</div>
       <div class="logo-sub">CS 대시보드 · 로그인</div>
     </div>
@@ -229,29 +329,29 @@ body { background: #1a2e50; font-family: 'Malgun Gothic', '맑은 고딕', sans-
     <div class="login-field">
       <label>아이디</label>
       <div class="login-input-wrap login-select-wrap">
-        <span style="position:absolute;left:11px;top:50%;transform:translateY(-50%);font-size:15px;line-height:1;pointer-events:none;z-index:1;">👤</span>
-        <select class="login-input" id="loginId" autocomplete="username">
-          <option value="관리자">관리자</option>
+        <span style="position:absolute;left:11px;top:50%;transform:translateY(-50%);font-size:15px;pointer-events:none;z-index:1;">👤</span>
+        <select class="login-input" id="loginId" autocomplete="username" onchange="onIdChange()">
+          <option value="관리자모드">관리자모드</option>
           <option value="리더급">리더급</option>
           <option value="꿈비">꿈비</option>
-          <option value="에르모어">에르모어</option>
-          <option value="개발자모드">개발자모드</option>
+          <option value="계열사">계열사</option>
         </select>
-        <span class="sel-chevron" aria-hidden="true">▼</span>
+        <span class="sel-chevron">▼</span>
       </div>
     </div>
 
-    <div class="login-field">
+    <div class="login-field" id="pwField">
       <label>비밀번호</label>
       <div class="login-input-wrap">
-        <span style="position:absolute;left:11px;top:50%;transform:translateY(-50%);font-size:15px;line-height:1;pointer-events:none;z-index:1;">🔑</span>
+        <span style="position:absolute;left:11px;top:50%;transform:translateY(-50%);font-size:15px;pointer-events:none;z-index:1;">🔑</span>
         <input type="password" class="login-input" id="loginPw" placeholder="PW 입력"
                autocomplete="current-password" onkeydown="if(event.key==='Enter')tryLogin()">
       </div>
+      <div class="pw-hint" id="pwHint">비밀번호 없이 로그인 버튼을 눌러주세요 🔓</div>
     </div>
 
     <div class="login-remember" onclick="toggleRemember()">
-      <div class="chk-box" id="rememberChk"><span style="font-size:11px;color:#fff;display:none;" id="chkMark">✓</span></div>
+      <div class="chk-box" id="rememberChk"><span id="chkMark">✓</span></div>
       <span>최근 로그인 정보 기억</span>
     </div>
 
@@ -261,45 +361,123 @@ body { background: #1a2e50; font-family: 'Malgun Gothic', '맑은 고딕', sans-
   </div>
 </div>
 
+<!-- ── 공개설정 모달 ── -->
+<div id="visModal">
+  <div class="vis-modal-box">
+    <div class="vis-modal-title" id="visModalTitle">공개설정</div>
+    <div class="vis-modal-sub">열람 권한을 설정합니다. 비공개 시 해당 등급 이하에서는 잠금 화면이 표시됩니다.</div>
+    <div class="vis-role-list" id="visRoleList"></div>
+    <div class="vis-modal-footer">
+      <button class="vis-cancel-btn" onclick="closeVisModal()">닫기</button>
+      <button class="vis-save-btn" onclick="saveVisSettings()">저장</button>
+    </div>
+  </div>
+</div>
+
 <div class="header">
   <div class="header-title">엄마감동팀</div>
   <div class="header-date" id="headerDate"></div>
 </div>
 
-<div class="tabs">
-  <div class="tab active" data-tab="AI보고" onclick="switchTab(this)">AI보고 <span style="font-size:10px;color:#4fc3f7;margin-left:2px;">★</span></div>
-  <div class="tab" data-tab="상담분석" onclick="switchTab(this)">상담분석</div>
-  <div class="tab" data-tab="주요kpi"  onclick="switchTab(this)">주요KPI</div>
-  <div class="tab" data-tab="상담실적" onclick="switchTab(this)">상담실적</div>
-  <div class="tab" data-tab="반품현황" onclick="switchTab(this)">반품현황</div>
-  <div class="tab" data-tab="처리현황" onclick="switchTab(this)">처리현황</div>
-  <div class="tab" data-tab="품질관리" onclick="switchTab(this)">품질관리</div>
-  <div class="tab" data-tab="건별보고" onclick="switchTab(this)">건별보고</div>
-  <div class="tab" data-tab="팀Tool"   onclick="switchTab(this)">팀Tool ✓</div>
-  <div class="tab" data-tab="개발자"   onclick="switchTab(this)">개발자</div>
-  <button onclick="openTestServer()" title="테스트서버 열기" style="margin-left:auto;height:26px;display:flex;align-items:center;gap:6px;background:#1e4a2a;border:1px solid #2e7a3e;color:#5be87a;padding:0 12px;border-radius:4px;font-size:12px;font-weight:600;cursor:pointer;font-family:inherit;white-space:nowrap;transition:background 0.15s;" onmouseenter="this.style.background='#256032'" onmouseleave="this.style.background='#1e4a2a'">
-    <span style="font-size:14px;">🖥</span> 테스트서버
-  </button>
-</div>
+<!-- ── 드롭다운 네비게이션 ── -->
+<nav class="nav-bar" id="navBar">
+
+  <!-- 대분류1: AI -->
+  <div class="nav-group" id="ng-ai">
+    <div class="nav-parent">
+      <span style="font-size:15px;">🤖</span> AI <span class="nav-arrow">▾</span>
+    </div>
+    <div class="nav-dropdown">
+      <div class="nav-item" data-tab="AI보고" onclick="switchTab(this)">
+        <span class="nav-item-label">AI보고 <span style="font-size:10px;color:#4fc3f7;">★</span></span>
+        <button class="vis-btn" data-tab="AI보고" onclick="openVisModal(event,'AI보고')">⚙</button>
+      </div>
+      <div class="nav-item" data-tab="상담분석" onclick="switchTab(this)">
+        <span class="nav-item-label">ALF(채널톡)</span>
+        <button class="vis-btn" data-tab="상담분석" onclick="openVisModal(event,'상담분석')">⚙</button>
+      </div>
+    </div>
+  </div>
+
+  <!-- 대분류2: 현황관리 -->
+  <div class="nav-group" id="ng-status">
+    <div class="nav-parent">
+      현황관리 <span class="nav-arrow">▾</span>
+    </div>
+    <div class="nav-dropdown">
+      <div class="nav-item" data-tab="주요kpi" onclick="switchTab(this)">
+        <span class="nav-item-label">주요KPI</span>
+        <button class="vis-btn" data-tab="주요kpi" onclick="openVisModal(event,'주요kpi')">⚙</button>
+      </div>
+      <div class="nav-item" data-tab="상담실적" onclick="switchTab(this)">
+        <span class="nav-item-label">상담실적</span>
+        <button class="vis-btn" data-tab="상담실적" onclick="openVisModal(event,'상담실적')">⚙</button>
+      </div>
+      <div class="nav-item" data-tab="반품현황" onclick="switchTab(this)">
+        <span class="nav-item-label">반품현황</span>
+        <button class="vis-btn" data-tab="반품현황" onclick="openVisModal(event,'반품현황')">⚙</button>
+      </div>
+      <div class="nav-item" data-tab="처리현황" onclick="switchTab(this)">
+        <span class="nav-item-label">처리현황</span>
+        <button class="vis-btn" data-tab="처리현황" onclick="openVisModal(event,'처리현황')">⚙</button>
+      </div>
+      <div class="nav-item" data-tab="품질관리" onclick="switchTab(this)">
+        <span class="nav-item-label">품질관리</span>
+        <button class="vis-btn" data-tab="품질관리" onclick="openVisModal(event,'품질관리')">⚙</button>
+      </div>
+    </div>
+  </div>
+
+  <!-- 대분류3: 건별보고 -->
+  <div class="nav-group" id="ng-report">
+    <div class="nav-parent">
+      건별보고 <span class="nav-arrow">▾</span>
+    </div>
+    <div class="nav-dropdown">
+      <div class="nav-item" data-tab="건별Issue" onclick="switchTab(this)">
+        <span class="nav-item-label">Issue</span>
+        <button class="vis-btn" data-tab="건별Issue" onclick="openVisModal(event,'건별Issue')">⚙</button>
+      </div>
+      <div class="nav-item" data-tab="건별보고" onclick="switchTab(this)">
+        <span class="nav-item-label">보고서</span>
+        <button class="vis-btn" data-tab="건별보고" onclick="openVisModal(event,'건별보고')">⚙</button>
+      </div>
+    </div>
+  </div>
+
+  <!-- 팀Tool / 개발자 (하위메뉴 없는 단독탭) -->
+  <div class="nav-group" id="ng-tool">
+    <div class="nav-parent" data-tab="팀Tool" onclick="switchTabDirect('팀Tool')" style="cursor:pointer;">
+      팀Tool ✓
+    </div>
+  </div>
+  <div class="nav-group" id="ng-dev">
+    <div class="nav-parent" data-tab="개발자" onclick="switchTabDirect('개발자')" style="cursor:pointer;">
+      개발자
+    </div>
+  </div>
+
+  <div class="nav-right">
+    <button class="test-server-btn" onclick="openTestServer()">
+      <span style="font-size:14px;">🖥</span> 테스트서버
+    </button>
+  </div>
+</nav>
 
 <div class="main">
 
   <div class="sidebar" id="sidebar">
 
-    <!-- ── 대시보드용 사이드바 ── -->
     <div id="dashSidebar">
       <div class="sb-label">연간현황</div>
       <div class="sb-item" data-type="yearly" data-period="2026" onclick="selectPeriod(this)">2026년</div>
       <div class="sb-divider"></div>
-
       <div class="sb-label">월간현황</div>
       <div id="monthlyList"></div>
       <div class="sb-divider"></div>
-
       <div class="sb-label">주간현황</div>
       <div id="weeklyList"></div>
       <div class="sb-divider"></div>
-
       <div class="sb-label">직접선택 <span style="font-size:9px;color:#4a6a8a;font-weight:400;letter-spacing:0;text-transform:none;">주간</span></div>
       <div class="date-pick-wrap">
         <button class="cal-toggle-btn" onclick="toggleCal()" id="calToggleBtn">
@@ -320,8 +498,6 @@ body { background: #1a2e50; font-family: 'Malgun Gothic', '맑은 고딕', sans-
       </div>
     </div>
 
-    <!-- ── 팀Tool 전용 사이드바 ── -->
-    <!-- ── 개발자 전용 사이드바 ── -->
     <div id="devSidebar" style="display:none;">
       <div class="sb-label">계정설정</div>
       <div class="sb-item" onclick="devNav('developer/account.html', this)">계정설정</div>
@@ -332,7 +508,6 @@ body { background: #1a2e50; font-family: 'Malgun Gothic', '맑은 고딕', sans-
       <div class="sb-item" onclick="devNav('developer/menuconfig.html', this)">메뉴구성</div>
     </div>
 
-    <!-- ── 건별보고 전용 사이드바 ── -->
     <div id="onceSidebar" style="display:none;">
       <div class="sb-label">건별보고</div>
       <div class="sb-item" onclick="onceNav('report/once/allstain.html', this)">세척기 (꿈비-브레쨔)</div>
@@ -374,685 +549,452 @@ body { background: #1a2e50; font-family: 'Malgun Gothic', '맑은 고딕', sans-
 
   <div class="content">
     <iframe id="mainFrame"></iframe>
+    <div id="noPermLayer"></div>
   </div>
 
 </div>
 
 <script>
-// ═══════════════════════════════════════════════════
-//  기간 파라미터 구조
-//
-//  하위 페이지(report/*.html)는 URL 파라미터를 읽어서
-//  해당 기간 데이터를 필터링하면 됨.
-//
-//  전달 파라미터:
-//    ?type=monthly  &period=2026-04
-//    ?type=weekly   &period=2026-04-17   ← 금요일 날짜
-//    ?type=yearly   &period=2026
-//    ?type=direct   &period=2026-04-15
-//
-//  주간 기준: 토요일 시작 ~ 금요일 종료
-//    예) period=2026-04-17 → 4/11(토)~4/17(금)
-//
-//  하위 페이지에서 읽는 예시 코드 (각 report/*.html 에 삽입):
-//  ─────────────────────────────────────────────────
-//  const params = new URLSearchParams(window.location.search);
-//  const type   = params.get('type')   || 'monthly';
-//  const period = params.get('period') || '';
-//
-//  if (type === 'weekly' && period) {
-//    const fri   = new Date(period);
-//    const sat   = new Date(fri); sat.setDate(fri.getDate() - 6);
-//    // sat ~ fri 범위로 데이터 필터
-//  }
-//  if (type === 'monthly' && period) {
-//    const [year, month] = period.split('-');
-//    // year, month 로 필터
-//  }
-// ═══════════════════════════════════════════════════
-
-// ── 중앙 관리 SCRIPT_URL ───────────────────────────
-// 앱스크립트 배포 URL이 바뀌면 여기만 수정
+// ═══════════════════════════════════════════
+//  중앙 설정
+// ═══════════════════════════════════════════
 const SCRIPT_URL = 'https://script.google.com/macros/s/AKfycbymKpZXyoAmsI978lOgGcJI8Z26J6UE8XesXb7haMJ6dRT16jAIFsJANMnK-Y9Wd35jNA/exec';
 
+// ── 탭 → 파일 매핑 ──
 const TAB_MAP = {
-  '주요kpi':  'report/kpi.html',
-  '상담실적': 'report/상담실적.html',
-  '반품현황': 'report/반품현황.html',
-  '처리현황': 'report/처리현황.html',
-  '품질관리': 'report/품질관리.html',
-  '건별보고': 'report/once/allstain.html',
-  'AI보고':   'report/ai보고.html',
-  '상담분석':  'report/채널톡보고.html',
-  '팀Tool':   'report/팀Tool.html',
-  '개발자':   'developer/account.html',
+  '주요kpi':    'report/kpi.html',
+  '상담실적':   'report/상담실적.html',
+  '반품현황':   'report/반품현황.html',
+  '처리현황':   'report/처리현황.html',
+  '품질관리':   'report/품질관리.html',
+  '건별Issue':  'report/once/issue.html',
+  '건별보고':   'report/once/allstain.html',
+  'AI보고':     'report/ai보고.html',
+  '상담분석':   'report/채널톡보고.html',
+  '팀Tool':     'report/팀Tool.html',
+  '개발자':     'developer/account.html',
 };
 
-let state = {
-  tab: '상담실적',
-  type: 'monthly',
-  period: ''
+// ── 계정 정보 ──
+// 계열사: PW 없이 로그인 (pw: null)
+const ACCOUNTS = {
+  '관리자모드': { pw: 'tladntmd',  role: 'admin'  },
+  '리더급':     { pw: 'rnjsaltnr', role: 'leader' },
+  '꿈비':       { pw: 'hihi00',    role: 'ggumbi' },
+  '계열사':     { pw: null,        role: 'affiliate' },
 };
 
-// ── 날짜 유틸 ──────────────────────────────────────
-function pad(n) { return String(n).padStart(2, '0'); }
-function toKey(d) { return `${d.getFullYear()}-${pad(d.getMonth()+1)}-${pad(d.getDate())}`; }
-function toDisplay(d) { return `${d.getMonth()+1}/${d.getDate()}`; }
+// ── 권한 등급 (낮을수록 상위) ──
+const ROLE_LEVEL = { admin: 0, leader: 1, ggumbi: 2, affiliate: 3 };
 
-// ── 포맷 변환 (내부 → 송출용) ──────────────────────
-// 월간: '2026-04'      → '26.04월'
-// 주간: '2026-04-17'   → '260417'   (금요일 YYMMDD)
-// 직접: '2026-04-15'   → '260415'
-function toPeriodParam(type, raw) {
-  if (type === 'monthly') {
-    const [y, m] = raw.split('-');
-    return `${String(y).slice(2)}.${m}월`;          // 26.04월
-  }
-  if (type === 'weekly' || type === 'direct') {
-    return raw.replace(/-/g, '').slice(2);           // 260417
-  }
-  return raw; // yearly 등 그대로
-}
+// ── 역할별 기본 허용 탭 (null = 전체허용) ──
+const ROLE_TABS = {
+  'admin':     null,
+  'leader':    ['AI보고','상담분석','주요kpi','상담실적','반품현황','처리현황','품질관리','건별Issue','건별보고','팀Tool','개발자'],
+  'ggumbi':    ['AI보고','상담분석','주요kpi','상담실적','반품현황','처리현황','품질관리','건별Issue','건별보고','팀Tool'],
+  'affiliate': ['팀Tool'],
+};
 
-// 주간: 금요일 기준 → 해당주 토(금-6일)~금
-function weekRange(fridayDate) {
-  const fri = new Date(fridayDate);
-  const sat = new Date(fri);
-  sat.setDate(fri.getDate() - 6);
-  return { sat, fri };
-}
+// ── 공개설정: 각 탭별로 어느 role까지 비공개 처리할지
+// 예) '상담실적': ['affiliate'] → affiliate 이하는 비공개
+// 값: 비공개 처리할 role 배열 (GAS에서 로드)
+let VIS_SETTINGS = {};   // { '탭명': ['role1','role2',...] }
+let visSettingsLoaded = false;
 
-// 기본 표시 금요일:
-// 월요일(1) 이상이면 지난주 금요일, 일요일(0)/토요일(6)이면 이번주 금요일
-function thisWeekFriday() {
-  const today = new Date();
-  const day = today.getDay(); // 0=일 1=월 ... 5=금 6=토
-  const fri = new Date(today);
-  if (day === 1) {
-    // 월요일 → 지난주 금요일 (3일 전)
-    fri.setDate(today.getDate() - 3);
-  } else if (day === 2 || day === 3 || day === 4) {
-    // 화~목 → 지난주 금요일
-    fri.setDate(today.getDate() - (day + 2));
-  } else if (day === 5) {
-    // 금요일 → 지난주 금요일 (아직 오늘자 마감 전)
-    fri.setDate(today.getDate() - 7);
-  } else if (day === 6) {
-    // 토요일 → 어제(금)가 이번주 마감
-    fri.setDate(today.getDate() - 1);
+// ── state ──
+let state = { tab: 'AI보고', type: 'monthly', period: '' };
+
+// ═══════════════════════════════════════════
+//  로그인
+// ═══════════════════════════════════════════
+function onIdChange() {
+  const id    = document.getElementById('loginId').value;
+  const hint  = document.getElementById('pwHint');
+  const pwInp = document.getElementById('loginPw');
+  if (id === '계열사') {
+    hint.style.display = 'block';
+    pwInp.value = '';
+    pwInp.placeholder = '로그인 버튼을 눌러주세요';
+    pwInp.disabled = true;
   } else {
-    // 일요일 → 지난 금요일 (2일 전)
-    fri.setDate(today.getDate() - 2);
+    hint.style.display = 'none';
+    pwInp.placeholder = 'PW 입력';
+    pwInp.disabled = false;
   }
-  return fri;
+  document.getElementById('loginError').textContent = '';
 }
 
-// 기본 표시 월: 말일 기준 전월
-// 오늘이 말일이 아니면 전월, 말일이면 당월
-function defaultMonth() {
-  const today = new Date();
-  const year  = today.getFullYear();
-  const month = today.getMonth() + 1; // 1~12
-  // 오늘이 해당월 말일인지 확인
-  const lastDay = new Date(year, month, 0).getDate();
-  if (today.getDate() === lastDay) {
-    // 말일이면 당월
-    return { year, month };
-  } else {
-    // 말일 전이면 전월
-    const prevMonth = month === 1 ? 12 : month - 1;
-    const prevYear  = month === 1 ? year - 1 : year;
-    return { year: prevYear, month: prevMonth };
-  }
+const REMEMBER_KEY = 'ggumbi_remember';
+let rememberChecked = false;
+
+function toggleRemember() {
+  rememberChecked = !rememberChecked;
+  const box  = document.getElementById('rememberChk');
+  if (box) box.classList.toggle('checked', rememberChecked);
 }
 
-// 올해 금요일 목록 (오늘 이전, 최신순)
-function fridaysUntilToday(year) {
-  const list = [];
-  const d = new Date(year, 0, 1);
-  while (d.getDay() !== 5) d.setDate(d.getDate() + 1);
-  const today = new Date();
-  while (d.getFullYear() === year && d <= today) {
-    list.push(new Date(d));
-    d.setDate(d.getDate() + 7);
-  }
-  return list.reverse();
-}
+function tryLogin() {
+  const id    = document.getElementById('loginId').value;
+  const pw    = document.getElementById('loginPw').value;
+  const errEl = document.getElementById('loginError');
+  const account = ACCOUNTS[id];
+  if (!account) { errEl.textContent = '아이디 정보가 없습니다.'; return; }
 
-// ── 렌더 ──────────────────────────────────────────
-function renderMonthly() {
-  const now  = new Date();
-  const year = now.getFullYear();
-  const curM = now.getMonth() + 1;        // 오늘 기준 현재 월
-  const def  = defaultMonth();            // 기본 선택 월 (전월 기준)
-  let html = '';
-  for (let m = 1; m <= 12; m++) {
-    const period = `${year}-${pad(m)}`;
-    const off = m > curM;                 // 미래월 비활성
-    const cur = m === def.month && year === def.year;  // 기본 선택
-    const cls = ['sb-item', 'sub', off ? 'off' : '', cur ? 'active' : ''].filter(Boolean).join(' ');
-    const dot = cur ? '<span class="now-dot"></span>' : '';
-    html += `<div class="${cls}" data-type="monthly" data-period="${period}"
-                  onclick="selectPeriod(this)">${m}월${dot}</div>`;
-  }
-  document.getElementById('monthlyList').innerHTML = html;
-}
-
-function renderWeekly() {
-  // 최근 6주만 표시 (최신순)
-  const fridays = fridaysUntilToday(new Date().getFullYear()).slice(0, 6);
-  const curKey  = toKey(thisWeekFriday());
-  let html = '';
-  fridays.forEach(fri => {
-    const { sat } = weekRange(fri);
-    const period  = toKey(fri);
-    const cur     = period === curKey;
-    const cls     = ['sb-item', 'sub', cur ? 'active' : ''].filter(Boolean).join(' ');
-    const dot     = cur ? '<span class="now-dot"></span>' : '';
-    html += `<div class="${cls}" data-type="weekly" data-period="${period}"
-                  onclick="selectPeriod(this)">
-               ${toDisplay(fri)}${dot}
-               <span class="week-range">${toDisplay(sat)}~${toDisplay(fri)}</span>
-             </div>`;
-  });
-  document.getElementById('weeklyList').innerHTML = html;
-}
-
-// ── 커스텀 달력 ────────────────────────────────────
-let calYear, calMonth, calHoverFri = null, calSelectedFri = null;
-
-function toggleCal() {
-  const popup = document.getElementById('calPopup');
-  popup.classList.toggle('open');
-  if (popup.classList.contains('open')) renderCal();
-}
-
-function calMove(dir) {
-  calMonth += dir;
-  if (calMonth < 0)  { calMonth = 11; calYear--; }
-  if (calMonth > 11) { calMonth = 0;  calYear++; }
-  renderCal();
-}
-
-// 어떤 날짜든 그 주(토~금) 금요일로 스냅
-function snapToFriday(d) {
-  const day = d.getDay(); // 0=일 ... 5=금 6=토
-  // 토요일: 이미 새 주 시작 → 다음 금요일(+6)
-  const diff = day === 6 ? 6 : (5 - day);
-  const fri = new Date(d);
-  fri.setDate(d.getDate() + diff);
-  return fri;
-}
-
-function renderCal() {
-  const label = document.getElementById('calMonthLabel');
-  label.textContent = `${calYear}년 ${calMonth + 1}월`;
-
-  const grid = document.getElementById('calGrid');
-  const today = new Date();
-  today.setHours(0,0,0,0);
-
-  // 이번달 1일의 요일
-  const firstDay = new Date(calYear, calMonth, 1).getDay();
-  // 이번달 마지막 날
-  const lastDate = new Date(calYear, calMonth + 1, 0).getDate();
-
-  let cells = [];
-
-  // 앞 빈칸 (이전달 날짜로 채움)
-  const prevLast = new Date(calYear, calMonth, 0).getDate();
-  for (let i = firstDay - 1; i >= 0; i--) {
-    cells.push({ day: prevLast - i, cur: false });
-  }
-  // 이번달
-  for (let d = 1; d <= lastDate; d++) {
-    cells.push({ day: d, cur: true });
-  }
-  // 뒤 빈칸
-  const tail = 7 - (cells.length % 7);
-  if (tail < 7) for (let d = 1; d <= tail; d++) cells.push({ day: d, cur: false });
-
-  let html = '';
-  cells.forEach((c, i) => {
-    const dow = i % 7; // 0=일 ~ 6=토
-    if (!c.cur) {
-      html += `<div class="cal-cell other-month empty">${c.day}</div>`;
-      return;
-    }
-    const date = new Date(calYear, calMonth, c.day);
-    date.setHours(0,0,0,0);
-    const fri = snapToFriday(date);
-    const friKey = toKey(fri);
-    const { sat } = weekRange(fri);
-
-    // hover 주 범위인지
-    const inHover = calHoverFri && friKey === toKey(calHoverFri);
-    // 선택된 주 범위인지
-    const inSel = calSelectedFri && friKey === toKey(calSelectedFri);
-    const isFriEnd = dow === 5; // 금요일 칸
-    const isToday = date.getTime() === today.getTime();
-
-    let cls = 'cal-cell';
-    if (dow === 0) cls += ' sun';
-    if (dow === 6) cls += ' sat';
-    if (inHover) cls += ' week-hover';
-    if (inHover && isFriEnd) cls += ' fri-end';
-    if (inSel && !inHover) cls += ' week-selected';
-    if (inSel && !inHover && isFriEnd) cls += ' fri-end';
-    if (isToday) cls += ' today-marker';
-
-    html += `<div class="${cls}"
-      onmouseenter="calHover('${friKey}')"
-      onmouseleave="calUnhover()"
-      onclick="selectCalWeek('${friKey}')"
-    >${c.day}</div>`;
-  });
-
-  grid.innerHTML = html;
-}
-
-function calHover(friKey) {
-  calHoverFri = new Date(friKey);
-  renderCal();
-}
-function calUnhover() {
-  calHoverFri = null;
-  renderCal();
-}
-
-function selectCalWeek(friKey) {
-  const fri = new Date(friKey);
-  const { sat } = weekRange(fri);
-  calSelectedFri = fri;
-
-  // 달력 토글 버튼 텍스트 = 금요일 날짜
-  document.getElementById('calToggleLabel').textContent =
-    `${toDisplay(fri)} (${toDisplay(sat)}~${toDisplay(fri)})`;
-
-  // 결과 레이블
-  document.getElementById('calResult').textContent =
-    `▶ ${fri.getFullYear()}.${pad(fri.getMonth()+1)}.${pad(fri.getDate())} (금)`;
-
-  // 달력 닫기
-  document.getElementById('calPopup').classList.remove('open');
-
-  renderCal();
-
-  // 6주 목록 active 연동
-  document.querySelectorAll('.sb-item').forEach(i => i.classList.remove('active'));
-  const match = document.querySelector(`.sb-item[data-period="${friKey}"]`);
-  if (match) match.classList.add('active');
-
-  state.type   = 'weekly';
-  state.period = friKey;
-  updateFrame();
-  updateHeader();
-}
-
-// ── 선택 핸들러 ────────────────────────────────────
-function selectPeriod(el) {
-  document.querySelectorAll('.sb-item').forEach(i => i.classList.remove('active'));
-  el.classList.add('active');
-  state.type   = el.dataset.type;
-  state.period = el.dataset.period;    // 내부키 저장
-  updateFrame();
-  updateHeader();
-}
-
-function toggleWeekly() {
-  // 더 이상 토글 없음 - 호환성 유지용 빈 함수
-}
-
-function switchTab(el) {
-  // 권한 체크
-  const role    = sessionStorage.getItem('userRole') || '';
-  const allowed = ROLE_TABS[role];
-  const tabName = el.dataset.tab;
-  if (allowed !== null && !allowed.includes(tabName)) {
-    // 탭 active 표시는 하되 권한 없음 메시지
-    document.querySelectorAll('.tab').forEach(t => t.classList.remove('active'));
-    el.classList.add('active');
-    state.tab = tabName;
-    showNoPermission(tabName);
+  // 계열사는 PW 불필요
+  if (account.pw !== null && account.pw !== pw) {
+    errEl.textContent = '아이디 또는 비밀번호가 올바르지 않습니다.';
+    document.getElementById('loginPw').value = '';
+    document.getElementById('loginPw').focus();
     return;
   }
-  hideNoPermission();
 
-  document.querySelectorAll('.tab').forEach(t => t.classList.remove('active'));
-  el.classList.add('active');
-  state.tab = el.dataset.tab;
-
-  const isToolTab  = state.tab === '팀Tool';
-  const isDevTab   = state.tab === '개발자';
-  const isKpiTab   = state.tab === '주요kpi';
-  const isOnceTab  = state.tab === '건별보고';
-
-  document.getElementById('dashSidebar').style.display  = (isToolTab || isOnceTab || isDevTab) ? 'none' : 'block';
-  document.getElementById('toolSidebar').style.display  = isToolTab ? 'block' : 'none';
-  document.getElementById('onceSidebar').style.display  = isOnceTab ? 'block' : 'none';
-  document.getElementById('devSidebar').style.display   = isDevTab  ? 'block' : 'none';
-
-  // 주요KPI: 월간/주간/직접선택 숨김, 연간만 표시
-  const monthly  = document.getElementById('monthlyList');
-  const weekly   = document.getElementById('weeklyList');
-  const calWrap  = document.querySelector('.date-pick-wrap');
-  const sbLabels = document.querySelectorAll('#dashSidebar .sb-label');
-
-  if (isKpiTab) {
-    if (monthly)  monthly.style.display  = 'none';
-    if (weekly)   weekly.style.display   = 'none';
-    if (calWrap)  calWrap.style.display  = 'none';
-    // 월간/주간/직접선택 라벨 숨김 (연간 라벨만 남김)
-    sbLabels.forEach(lb => {
-      if (lb.textContent.trim() !== '연간현황') lb.style.display = 'none';
-    });
-    // sb-divider 도 숨김 (연간 아래 것만)
-    document.querySelectorAll('#dashSidebar .sb-divider').forEach(d => d.style.display = 'none');
-    // 주요KPI는 yearly로 신호
-    state.type   = 'yearly';
-    state.period = String(new Date().getFullYear());
+  if (rememberChecked) {
+    localStorage.setItem(REMEMBER_KEY, JSON.stringify({ id, pw: account.pw !== null ? pw : '' }));
   } else {
-    // 다른 탭: 원래대로 복원
-    if (monthly)  monthly.style.display  = '';
-    if (weekly)   weekly.style.display   = '';
-    if (calWrap)  calWrap.style.display  = '';
-    sbLabels.forEach(lb => lb.style.display = '');
-    document.querySelectorAll('#dashSidebar .sb-divider').forEach(d => d.style.display = '');
-    // 기본 monthly 로 복귀 (KPI에서 다른 탭으로 이동 시)
-    if (state.type === 'yearly') {
-      const def    = defaultMonth();
-      state.type   = 'monthly';
-      state.period = `${def.year}-${pad(def.month)}`;
-    }
+    localStorage.removeItem(REMEMBER_KEY);
   }
 
+  sessionStorage.setItem('loggedIn', '1');
+  sessionStorage.setItem('userId', id);
+  sessionStorage.setItem('userRole', account.role);
+  document.getElementById('loginOverlay').style.display = 'none';
+  errEl.textContent = '';
+
+  const btn = document.querySelector('.logout-btn');
+  if (btn) btn.textContent = `🔒 ${id} · 로그아웃`;
+
+  applyRolePermissions(account.role);
+  loadVisSettings();
+}
+
+function doLogout() {
+  sessionStorage.removeItem('loggedIn');
+  sessionStorage.removeItem('userId');
+  sessionStorage.removeItem('userRole');
+  document.getElementById('loginOverlay').style.display = 'flex';
+  document.getElementById('loginPw').value = '';
+  document.getElementById('loginError').textContent = '';
+  // 계열사 hint 초기화
+  const hint  = document.getElementById('pwHint');
+  const pwInp = document.getElementById('loginPw');
+  if (hint)  hint.style.display = 'none';
+  if (pwInp) { pwInp.disabled = false; pwInp.placeholder = 'PW 입력'; }
+}
+
+// ── 세션/기억 복원 ──
+(function checkSession() {
+  if (sessionStorage.getItem('loggedIn') === '1') {
+    document.getElementById('loginOverlay').style.display = 'none';
+    const id  = sessionStorage.getItem('userId') || '';
+    const btn = document.querySelector('.logout-btn');
+    if (btn && id) btn.textContent = `🔒 ${id} · 로그아웃`;
+    const savedRole = sessionStorage.getItem('userRole');
+    if (savedRole) {
+      setTimeout(() => { applyRolePermissions(savedRole); loadVisSettings(); }, 0);
+    }
+    return;
+  }
+  try {
+    const saved = localStorage.getItem(REMEMBER_KEY);
+    if (saved) {
+      const { id, pw } = JSON.parse(saved);
+      const sel  = document.getElementById('loginId');
+      const pwEl = document.getElementById('loginPw');
+      if (sel)  sel.value  = id;
+      if (pwEl && pw) pwEl.value = pw;
+      rememberChecked = true;
+      const box = document.getElementById('rememberChk');
+      if (box) box.classList.add('checked');
+    }
+  } catch(e) {}
+})();
+
+// ═══════════════════════════════════════════
+//  권한 적용
+// ═══════════════════════════════════════════
+function applyRolePermissions(role) {
+  const isAdmin = role === 'admin';
+  const allowed = ROLE_TABS[role];
+
+  // 관리자 모드: nav-bar에 admin-mode 클래스 → vis-btn 표시
+  const navBar = document.getElementById('navBar');
+  if (isAdmin) navBar.classList.add('admin-mode');
+  else         navBar.classList.remove('admin-mode');
+
+  // 계열사: 팀Tool만 → 나머지 숨김 처리
+  document.querySelectorAll('.nav-item[data-tab]').forEach(item => {
+    const tabName = item.dataset.tab;
+    if (allowed !== null && !allowed.includes(tabName)) {
+      item.style.display = role === 'affiliate' ? 'none' : 'flex';
+      item.style.opacity = role === 'affiliate' ? '' : '0.45';
+      item.style.pointerEvents = role === 'affiliate' ? '' : 'none';
+    } else {
+      item.style.display = 'flex';
+      item.style.opacity = '';
+      item.style.pointerEvents = '';
+    }
+  });
+
+  // 개발자탭 (nav-parent 단독)
+  const devNG = document.getElementById('ng-dev');
+  if (devNG) {
+    devNG.style.display = (allowed === null || allowed.includes('개발자')) ? '' : 'none';
+  }
+
+  // 계열사: 팀Tool로 바로 이동
+  if (role === 'affiliate') {
+    setTimeout(() => switchTabDirect('팀Tool'), 100);
+  }
+
+  updateVisBtnDisplay();
+}
+
+// ═══════════════════════════════════════════
+//  공개설정 (VIS) - GAS 연동
+// ═══════════════════════════════════════════
+const VIS_SHEET = '페이지열람권한';
+
+// GAS에서 설정 로드
+async function loadVisSettings() {
+  try {
+    const res  = await fetch(`${SCRIPT_URL}?action=getVisSettings`);
+    const json = await res.json();
+    if (json.ok && json.settings) {
+      VIS_SETTINGS = json.settings;
+      visSettingsLoaded = true;
+      updateVisBtnDisplay();
+    }
+  } catch(e) {
+    console.warn('[VIS] 설정 로드 실패:', e.message);
+    visSettingsLoaded = true; // 실패해도 로컬 상태로 동작
+  }
+}
+
+// GAS에 설정 저장
+async function saveVisToGAS() {
+  try {
+    const res  = await fetch(SCRIPT_URL, {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ action: 'saveVisSettings', settings: VIS_SETTINGS })
+    });
+    const json = await res.json();
+    return json.ok;
+  } catch(e) {
+    console.warn('[VIS] 저장 실패:', e.message);
+    return false;
+  }
+}
+
+// 공개설정 버튼 상태 갱신
+function updateVisBtnDisplay() {
+  document.querySelectorAll('.vis-btn').forEach(btn => {
+    const tab       = btn.dataset.tab;
+    const hidden    = VIS_SETTINGS[tab] || [];
+    const hasHidden = hidden.length > 0;
+    btn.classList.toggle('restricted', hasHidden);
+    // 버튼에 현재 설정 요약 표시
+    if (hasHidden) {
+      btn.title = `비공개: ${hidden.join(', ')}`;
+      btn.textContent = '🔒';
+    } else {
+      btn.title = '공개설정';
+      btn.textContent = '⚙';
+    }
+  });
+}
+
+// 현재 탭에 접근 권한이 있는지 확인 (VIS_SETTINGS 기준)
+function hasVisAccess(tabName, role) {
+  const hidden = VIS_SETTINGS[tabName] || [];
+  return !hidden.includes(role);
+}
+
+// ── 공개설정 모달 ──
+let visCurrentTab = '';
+let visTempSettings = {}; // 모달 내 임시 상태
+
+const ROLE_DISPLAY = [
+  // [role, 표시명, 레벨 설명]
+  ['leader',    '리더급',  '리더급 이하'],
+  ['ggumbi',    '꿈비',    '꿈비 이하'],
+  ['affiliate', '계열사',  '계열사'],
+];
+
+function openVisModal(evt, tabName) {
+  evt.stopPropagation();
+  visCurrentTab = tabName;
+  visTempSettings = JSON.parse(JSON.stringify(VIS_SETTINGS[tabName] || []));
+
+  document.getElementById('visModalTitle').textContent = `⚙ 공개설정 — ${tabName}`;
+
+  // 역할별 행 생성
+  let html = '';
+  ROLE_DISPLAY.forEach(([role, name, desc]) => {
+    const isHidden = visTempSettings.includes(role);
+    html += `
+    <div class="vis-role-row" id="vrow-${role}">
+      <div>
+        <div class="role-name">${name}</div>
+        <div style="font-size:10px;color:#4a6a8a;margin-top:2px;">${desc}</div>
+      </div>
+      <span class="role-badge ${isHidden ? 'badge-hidden' : 'badge-open'}" id="vbadge-${role}">
+        ${isHidden ? '비공개' : '공개'}
+      </span>
+      <button class="vis-toggle" id="vtoggle-${role}" onclick="toggleVisRole('${role}')">
+        ${isHidden ? '공개로 변경' : '비공개 설정'}
+      </button>
+    </div>`;
+  });
+  document.getElementById('visRoleList').innerHTML = html;
+  document.getElementById('visModal').classList.add('open');
+}
+
+function toggleVisRole(role) {
+  const idx = visTempSettings.indexOf(role);
+  if (idx >= 0) visTempSettings.splice(idx, 1);
+  else          visTempSettings.push(role);
+
+  // UI 갱신
+  const badge  = document.getElementById(`vbadge-${role}`);
+  const toggle = document.getElementById(`vtoggle-${role}`);
+  const isHidden = visTempSettings.includes(role);
+  badge.className  = `role-badge ${isHidden ? 'badge-hidden' : 'badge-open'}`;
+  badge.textContent = isHidden ? '비공개' : '공개';
+  toggle.textContent = isHidden ? '공개로 변경' : '비공개 설정';
+}
+
+function closeVisModal() {
+  document.getElementById('visModal').classList.remove('open');
+}
+
+async function saveVisSettings() {
+  VIS_SETTINGS[visCurrentTab] = [...visTempSettings];
+  updateVisBtnDisplay();
+  closeVisModal();
+
+  const ok = await saveVisToGAS();
+  if (!ok) {
+    // 저장 실패 시 알림 (비차단)
+    const msg = document.createElement('div');
+    msg.style.cssText = 'position:fixed;top:60px;right:20px;background:#3a1a1a;border:1px solid #6a2a2a;color:#e87a7a;padding:10px 16px;border-radius:6px;font-size:12px;z-index:9000;';
+    msg.textContent = '⚠ GAS 저장 실패 — 이 세션에서만 유효합니다';
+    document.body.appendChild(msg);
+    setTimeout(() => msg.remove(), 3000);
+  }
+}
+
+// 모달 바깥 클릭 시 닫기
+document.getElementById('visModal').addEventListener('click', function(e) {
+  if (e.target === this) closeVisModal();
+});
+
+// ═══════════════════════════════════════════
+//  탭 전환
+// ═══════════════════════════════════════════
+function switchTab(el) {
+  const tabName = el.dataset.tab;
+  const role    = sessionStorage.getItem('userRole') || '';
+
+  // 네비 active 표시
+  document.querySelectorAll('.nav-item[data-tab]').forEach(t => t.classList.remove('active'));
+  el.classList.add('active');
+
+  // 상위 대분류 active
+  document.querySelectorAll('.nav-parent').forEach(p => p.classList.remove('has-active'));
+  const parentEl = el.closest('.nav-group')?.querySelector('.nav-parent');
+  if (parentEl) parentEl.classList.add('has-active');
+
+  state.tab = tabName;
+  _applyTab(tabName, role);
+}
+
+function switchTabDirect(tabName) {
+  const role = sessionStorage.getItem('userRole') || '';
+  document.querySelectorAll('.nav-item[data-tab]').forEach(t => t.classList.remove('active'));
+  document.querySelectorAll('.nav-parent').forEach(p => p.classList.remove('has-active'));
+  // 단독 nav-parent active
+  document.querySelectorAll(`.nav-parent[data-tab="${tabName}"]`).forEach(p => p.classList.add('has-active'));
+  state.tab = tabName;
+  _applyTab(tabName, role);
+}
+
+function _applyTab(tabName, role) {
+  const allowed = ROLE_TABS[role];
+
+  // 기본 권한 체크
+  const hasRoleAccess = allowed === null || allowed.includes(tabName);
+  // 공개설정 체크
+  const hasVisAccess_ = hasVisAccess(tabName, role);
+
+  if (!hasRoleAccess || !hasVisAccess_) {
+    showNoPermission(tabName);
+    _switchSidebar(tabName);
+    return;
+  }
+
+  hideNoPermission();
+  _switchSidebar(tabName);
+
+  const isToolTab = tabName === '팀Tool';
+  const isDevTab  = tabName === '개발자';
+  const isKpiTab  = tabName === '주요kpi';
+  const isOnceTab = tabName === '건별보고' || tabName === '건별Issue';
+
   if (isOnceTab) {
-    onceNav('report/once/allstain.html', null);
+    onceNav(TAB_MAP[tabName] || 'report/once/allstain.html', null);
   } else if (isDevTab) {
     devNav('developer/account.html', null);
   } else if (isToolTab) {
     toolNav('tool/tool_main.html', null);
     setTimeout(() => loadAndBroadcastCSV(false), 0);
   } else {
+    const isKpi = tabName === '주요kpi';
+    if (isKpi) {
+      state.type   = 'yearly';
+      state.period = String(new Date().getFullYear());
+    } else if (state.type === 'yearly') {
+      const def    = defaultMonth();
+      state.type   = 'monthly';
+      state.period = `${def.year}-${pad(def.month)}`;
+    }
     updateFrame();
     updateHeader();
   }
-}
 
-// 팀Tool 내 메뉴 이동
-function devNav(path, el) {
-  if (el) {
-    document.querySelectorAll('#devSidebar .sb-item').forEach(i => i.classList.remove('active'));
-    el.classList.add('active');
-  }
-  const role = sessionStorage.getItem('userRole') || '';
-  // 읽기전용 여부를 URL 파라미터로 전달
-  const readOnly = role === 'leader' ? '?readonly=1' : '';
-  const frame = document.getElementById('mainFrame');
-  frame.onload = () => pushRoleToFrame(frame);
-  frame.src = path + readOnly;
-}
-
-function onceNav(path, el) {
-  if (el) {
-    document.querySelectorAll('#onceSidebar .sb-item').forEach(i => i.classList.remove('active'));
-    el.classList.add('active');
-  }
-  const frame = document.getElementById('mainFrame');
-  frame.onload = () => pushRoleToFrame(frame);
-  frame.src = path;
-}
-
-function toolNav(path, el) {
-  if (el) {
-    document.querySelectorAll('#toolSidebar .sb-item').forEach(i => i.classList.remove('active'));
-    el.classList.add('active');
-  }
-  const frame = document.getElementById('mainFrame');
-
-  // 개발자 로그인 시 ?dev=1 파라미터 추가
-  const role = sessionStorage.getItem('userRole') || '';
-  const devParam = role === 'dev' ? (path.includes('?') ? '&dev=1' : '?dev=1') : '';
-  frame.onload = () => {
-    pushRoleToFrame(frame);
-    if (typeof pushCSVToFrame === 'function') pushCSVToFrame();
-  };
-  frame.src = path + devParam;
-}
-
-// 외부 링크 → iframe으로만 표시
-function toolNavExternal(url, el) {
-  if (el) {
-    document.querySelectorAll('#toolSidebar .sb-item').forEach(i => i.classList.remove('active'));
-    el.classList.add('active');
-  }
-  const frame = document.getElementById('mainFrame');
-  frame.src = url;
-}
-
-// ── iframe 갱신 ────────────────────────────────────
-// 송출 포맷:
-//   월간 → ?type=monthly&period=26.04월
-//   주간 → ?type=weekly&period=260417
-//   직접 → ?type=direct&period=260415
-function updateFrame() {
-  const base = TAB_MAP[state.tab];
-  if (!base) return;
-  const periodParam = toPeriodParam(state.type, state.period);
-  const url = `${base}?type=${encodeURIComponent(state.type)}&period=${encodeURIComponent(periodParam)}`;
-  const frame = document.getElementById('mainFrame');
-  // onload 먼저 등록 후 src 설정 (이벤트 누락 방지)
-  frame.onload = () => {
-    try {
-      frame.contentWindow.postMessage({ type: 'SCRIPT_URL', url: SCRIPT_URL }, '*');
-    } catch(e) {}
-    if (typeof pushCSVToFrame === 'function') pushCSVToFrame();
-    // ★ 권한 정보 전송
-    pushRoleToFrame(frame);
-  };
-  frame.src = url;
-}
-
-// ── 권한 정보를 iframe에 전송 ──────────────────────
-function pushRoleToFrame(frame) {
-  if (!frame || !frame.contentWindow) return;
-  const role = sessionStorage.getItem('userRole') || '';
-  try {
-    frame.contentWindow.postMessage({
-      type:       'ROLE_INFO',
-      role:       role,
-      roleLevel:  ROLE_LEVEL[role] || 0,
-      isAdmin:    (ROLE_LEVEL[role] || 0) >= 4,
-      cardPerms:  window._cardPerms || {},
-      roleLevelMap: MIN_ROLE_LEVEL,
-      roleLabels:   ROLE_LABELS,
-    }, '*');
-  } catch(e) {}
-}
-
-// ── 카드 권한 설정 GAS에서 불러오기 ───────────────
-window._cardPerms = {};
-async function loadCardPerms() {
-  try {
-    const res = await fetch(`${SCRIPT_URL}?action=getCardPerms`, { cache: 'no-cache' });
-    const data = await res.json();
-    if (data.ok) {
-      window._cardPerms = data.perms || {};
-      console.log('[index] 카드권한 로드:', Object.keys(window._cardPerms).length, '페이지');
-    }
-  } catch(e) { console.warn('[index] 카드권한 로드 실패:', e.message); }
-}
-
-// ── 카드 권한 저장 (각 페이지에서 요청 수신) ──────
-window.addEventListener('message', function(e) {
-  const d = e.data || {};
-  if (d.type === 'SAVE_CARD_PERM') {
-    const { pageId, cardId, minRole } = d;
-    if (!pageId || !cardId) return;
-    // 로컬 캐시 업데이트
-    if (!window._cardPerms[pageId]) window._cardPerms[pageId] = {};
-    window._cardPerms[pageId][cardId] = minRole;
-    // GAS에 저장
-    fetch(SCRIPT_URL, {
-      method:  'POST',
-      body:    JSON.stringify({ action: 'saveCardPerm', pageId, cardId, minRole }),
-    }).then(r => r.json()).then(d => {
-      if (!d.ok) console.warn('[index] 카드권한 저장 실패:', d.msg);
-      else {
-        // 저장 후 현재 iframe에 최신 권한 재전송
-        const frame = document.getElementById('mainFrame');
-        if (frame) pushRoleToFrame(frame);
-      }
-    }).catch(err => console.warn('[index] 카드권한 저장 오류:', err));
-  }
-});
-
-
-// ── 헤더 날짜 ─────────────────────────────────────
-function updateHeader() {
-  const { type, period } = state;  // 헤더는 내부키 기준으로 읽기 편하게 표시
-  let label = '';
-  if (type === 'yearly') {
-    label = `${period}년 연간`;
-  } else if (type === 'monthly') {
-    const [y, m] = period.split('-');
-    label = `${y}년 기준 · ${parseInt(m)}월 마감`;
-  } else if (type === 'weekly') {
-    const fri = new Date(period);
-    const { sat } = weekRange(fri);
-    label = `주간 · ${toDisplay(sat)} ~ ${toDisplay(fri)}`;
-  } else if (type === 'direct') {
-    label = `직접선택 · ${period}`;
-  }
-  const now = new Date();
-  document.getElementById('headerDate').textContent =
-    `${label} · ${now.getFullYear()}.${pad(now.getMonth()+1)}.${pad(now.getDate())}`;
-}
-
-// ── 초기화 ─────────────────────────────────────────
-function openTestServer() {
-  window.open('https://shim0627.github.io/shim0627/', '_blank');
-}
-
-function init() {
-  // ★ 카드 권한 설정 GAS에서 선로드
-  loadCardPerms();
-
-  renderMonthly();
-  renderWeekly();
-
-  // 기본 탭: AI보고 → switchTab으로 처리해서 사이드바까지 정상 표시
-  const aiTab = document.querySelector('.tab[data-tab="AI보고"]');
-  if (aiTab) switchTab(aiTab);
-
-  // 주간 모드로 설정 + 최신 주차 선택
-  state.type = 'weekly';
-  const fri    = thisWeekFriday();
-  const friKey = toKey(fri);
-  state.period = friKey;
-
-  // 주간 목록에서 해당 항목 active 표시
-  document.querySelectorAll('#weeklyList .sb-item').forEach(el => {
-    el.classList.toggle('active', el.dataset.period === friKey);
-  });
-
-  // 주간 목록 펼치기 (open 클래스)
-  const weeklyList = document.getElementById('weeklyList');
-  if (weeklyList) weeklyList.style.display = 'block';
-
-  updateHeader();
-  updateFrame();
-}
-
-
-// ── 계정 정보 ──────────────────────────────────────
-const ACCOUNTS = {
-  '관리자':    { pw: 'admin0000',  role: 'admin'  },
-  '리더급':    { pw: 'rnjsaltnr', role: 'leader' },
-  '꿈비':      { pw: 'hihi00',    role: 'ggumbi' },
-  '에르모어':  { pw: 'dpfmahdj', role: 'ermore' },
-  '개발자모드': { pw: 'tladntmd', role: 'dev' },
-};
-
-// ── 권한 등급 정의 (상위가 하위 포함) ─────────────
-// admin > leader > user > affiliate
-// ※ role 매핑: ggumbi/ermore → user/affiliate 계열
-// dev는 admin과 동급 (관리자모드 표시 포함)
-const ROLE_LEVEL = {
-  'admin':  4,
-  'dev':    4,   // 개발자도 관리자급 (설정 아이콘 표시)
-  'leader': 3,
-  'ggumbi': 2,   // user 등급
-  'ermore': 1,   // affiliate 등급
-};
-// minRole key → level 매핑 (카드 권한 설정용)
-const MIN_ROLE_LEVEL = {
-  'admin':     4,
-  'leader':    3,
-  'user':      2,
-  'affiliate': 1,
-};
-// minRole 한글 라벨
-const ROLE_LABELS = {
-  'admin':     '관리자',
-  'leader':    '리더급',
-  'user':      '사용자',
-  'affiliate': '계열사',
-};
-
-// 역할별 허용 탭 목록 (null = 전체허용)
-const ROLE_TABS = {
-  'admin':  null,
-  'dev':    null,
-  'leader': ['AI보고','상담분석','주요kpi','상담실적','반품현황','처리현황','품질관리','건별보고','팀Tool','개발자'],
-  'ggumbi': ['AI보고','상담분석','주요kpi','상담실적','반품현황','처리현황','품질관리','건별보고','팀Tool'],
-  'ermore': ['팀Tool'],
-};
-
-function applyRolePermissions(role) {
-  const allowed = ROLE_TABS[role];
-  document.querySelectorAll('.tab').forEach(tab => {
-    const tabName = tab.dataset.tab;
-    const hasAccess = allowed === null || allowed.includes(tabName);
-    // 에르모어는 탭 숨김 X, 스타일만 흐리게
-    if (role === 'ermore' && !hasAccess) {
-      tab.style.opacity = '0.45';
-      tab.style.cursor  = 'default';
-    } else if (!hasAccess) {
-      tab.style.display = 'none';
-    } else {
-      tab.style.display = '';
-      tab.style.opacity = '';
-      tab.style.cursor  = '';
-    }
-  });
-
-  // 에르모어: 팀Tool로 바로 이동
-  if (role === 'ermore') {
-    const toolTab = document.querySelector('.tab[data-tab="팀Tool"]');
-    if (toolTab) switchTab(toolTab);
+  // 사이드바 기간 컨트롤 표시/숨김
+  const monthly = document.getElementById('monthlyList');
+  const weekly  = document.getElementById('weeklyList');
+  const calWrap = document.querySelector('.date-pick-wrap');
+  const sbLabels = document.querySelectorAll('#dashSidebar .sb-label');
+  if (isKpiTab) {
+    if (monthly) monthly.style.display = 'none';
+    if (weekly)  weekly.style.display  = 'none';
+    if (calWrap) calWrap.style.display = 'none';
+    sbLabels.forEach(lb => { if (lb.textContent.trim() !== '연간현황') lb.style.display = 'none'; });
+    document.querySelectorAll('#dashSidebar .sb-divider').forEach(d => d.style.display = 'none');
+  } else {
+    if (monthly) monthly.style.display = '';
+    if (weekly)  weekly.style.display  = '';
+    if (calWrap) calWrap.style.display = '';
+    sbLabels.forEach(lb => lb.style.display = '');
+    document.querySelectorAll('#dashSidebar .sb-divider').forEach(d => d.style.display = '');
   }
 }
 
-// 권한 없는 페이지 메시지 표시
+function _switchSidebar(tabName) {
+  const isToolTab = tabName === '팀Tool';
+  const isDevTab  = tabName === '개발자';
+  const isOnceTab = tabName === '건별보고' || tabName === '건별Issue';
+  document.getElementById('dashSidebar').style.display = (isToolTab || isOnceTab || isDevTab) ? 'none' : 'block';
+  document.getElementById('toolSidebar').style.display = isToolTab ? 'block' : 'none';
+  document.getElementById('onceSidebar').style.display = isOnceTab ? 'block' : 'none';
+  document.getElementById('devSidebar').style.display  = isDevTab  ? 'block' : 'none';
+}
+
 function showNoPermission(tabName) {
+  const layer = document.getElementById('noPermLayer');
   const frame = document.getElementById('mainFrame');
-  if (!frame) return;
-  // iframe 대신 부모에 메시지 레이어 표시
-  let layer = document.getElementById('noPermLayer');
-  if (!layer) {
-    layer = document.createElement('div');
-    layer.id = 'noPermLayer';
-    layer.style.cssText = `
-      position:absolute; inset:0; z-index:10;
-      background:#f0f2f5;
-      display:flex; flex-direction:column;
-      align-items:center; justify-content:center;
-      gap:12px;
-    `;
-    frame.parentNode.style.position = 'relative';
-    frame.parentNode.appendChild(layer);
-  }
   layer.innerHTML = `
     <div style="font-size:40px;">🔒</div>
     <div style="font-size:16px;font-weight:600;color:#1a2e50;">${tabName} 메뉴</div>
@@ -1072,183 +1014,228 @@ function hideNoPermission() {
   if (frame) frame.style.display = 'block';
 }
 
-const REMEMBER_KEY = 'ggumbi_remember';
-let rememberChecked = false;
-
-function toggleRemember() {
-  rememberChecked = !rememberChecked;
-  const box  = document.getElementById('rememberChk');
-  const mark = document.getElementById('chkMark');
-  if (box)  box.classList.toggle('checked', rememberChecked);
-  if (mark) mark.style.display = rememberChecked ? 'block' : 'none';
+// ── 서브 네비 ──
+function devNav(path, el) {
+  if (el) { document.querySelectorAll('#devSidebar .sb-item').forEach(i => i.classList.remove('active')); el.classList.add('active'); }
+  const role = sessionStorage.getItem('userRole') || '';
+  const readOnly = role === 'leader' ? '?readonly=1' : '';
+  document.getElementById('mainFrame').src = path + readOnly;
+}
+function onceNav(path, el) {
+  if (el) { document.querySelectorAll('#onceSidebar .sb-item').forEach(i => i.classList.remove('active')); el.classList.add('active'); }
+  document.getElementById('mainFrame').src = path;
+}
+function toolNav(path, el) {
+  if (el) { document.querySelectorAll('#toolSidebar .sb-item').forEach(i => i.classList.remove('active')); el.classList.add('active'); }
+  const frame = document.getElementById('mainFrame');
+  const role  = sessionStorage.getItem('userRole') || '';
+  const devParam = role === 'dev' ? (path.includes('?') ? '&dev=1' : '?dev=1') : '';
+  frame.src = path + devParam;
+  frame.onload = () => { if (typeof pushCSVToFrame === 'function') pushCSVToFrame(); };
+}
+function toolNavExternal(url, el) {
+  if (el) { document.querySelectorAll('#toolSidebar .sb-item').forEach(i => i.classList.remove('active')); el.classList.add('active'); }
+  document.getElementById('mainFrame').src = url;
 }
 
-function tryLogin() {
-  const id    = document.getElementById('loginId').value;
-  const pw    = document.getElementById('loginPw').value;
-  const errEl = document.getElementById('loginError');
-
-  const account = ACCOUNTS[id];
-  if (!account || account.pw !== pw) {
-    errEl.textContent = '아이디 또는 비밀번호가 올바르지 않습니다.';
-    document.getElementById('loginPw').value = '';
-    document.getElementById('loginPw').focus();
-    return;
-  }
-
-  // 기억하기 체크 시 localStorage에 저장
-  if (rememberChecked) {
-    localStorage.setItem(REMEMBER_KEY, JSON.stringify({ id, pw }));
-  } else {
-    localStorage.removeItem(REMEMBER_KEY);
-  }
-
-  // 로그인 성공
-  sessionStorage.setItem('loggedIn', '1');
-  sessionStorage.setItem('userId', id);
-  sessionStorage.setItem('userRole', account.role);
-  document.getElementById('loginOverlay').style.display = 'none';
-  errEl.textContent = '';
-
-  const btn = document.querySelector('.logout-btn');
-  if (btn) btn.textContent = `🔒 ${id} · 로그아웃`;
-
-  applyRolePermissions(account.role);
-  // ★ 로그인 후 현재 iframe에 권한 즉시 전송
-  setTimeout(() => {
-    const frame = document.getElementById('mainFrame');
-    if (frame) pushRoleToFrame(frame);
-  }, 300);
+// ═══════════════════════════════════════════
+//  날짜 유틸
+// ═══════════════════════════════════════════
+function pad(n) { return String(n).padStart(2, '0'); }
+function toKey(d) { return `${d.getFullYear()}-${pad(d.getMonth()+1)}-${pad(d.getDate())}`; }
+function toDisplay(d) { return `${d.getMonth()+1}/${d.getDate()}`; }
+function toPeriodParam(type, raw) {
+  if (type === 'monthly') { const [y,m] = raw.split('-'); return `${String(y).slice(2)}.${m}월`; }
+  if (type === 'weekly' || type === 'direct') return raw.replace(/-/g,'').slice(2);
+  return raw;
+}
+function weekRange(fridayDate) { const fri=new Date(fridayDate); const sat=new Date(fri); sat.setDate(fri.getDate()-6); return {sat,fri}; }
+function thisWeekFriday() {
+  const today=new Date(); const day=today.getDay(); const fri=new Date(today);
+  if (day===1) fri.setDate(today.getDate()-3);
+  else if (day>=2&&day<=4) fri.setDate(today.getDate()-(day+2));
+  else if (day===5) fri.setDate(today.getDate()-7);
+  else if (day===6) fri.setDate(today.getDate()-1);
+  else fri.setDate(today.getDate()-2);
+  return fri;
+}
+function defaultMonth() {
+  const today=new Date(); const year=today.getFullYear(); const month=today.getMonth()+1;
+  const lastDay=new Date(year,month,0).getDate();
+  if (today.getDate()===lastDay) return {year,month};
+  return { year: month===1?year-1:year, month: month===1?12:month-1 };
+}
+function fridaysUntilToday(year) {
+  const list=[]; const d=new Date(year,0,1);
+  while(d.getDay()!==5) d.setDate(d.getDate()+1);
+  const today=new Date();
+  while(d.getFullYear()===year&&d<=today) { list.push(new Date(d)); d.setDate(d.getDate()+7); }
+  return list.reverse();
 }
 
-function doLogout() {
-  sessionStorage.removeItem('loggedIn');
-  sessionStorage.removeItem('userId');
-  sessionStorage.removeItem('userRole');
-  document.getElementById('loginOverlay').style.display = 'flex';
-  document.getElementById('loginPw').value = '';
-  document.getElementById('loginError').textContent = '';
-  document.getElementById('loginPw').focus();
+// ── 렌더 ──
+function renderMonthly() {
+  const now=new Date(); const year=now.getFullYear(); const curM=now.getMonth()+1; const def=defaultMonth();
+  let html='';
+  for(let m=1;m<=12;m++){
+    const period=`${year}-${pad(m)}`;
+    const off=m>curM;
+    const cur=m===def.month&&year===def.year;
+    const cls=['sb-item','sub',off?'off':'',cur?'active':''].filter(Boolean).join(' ');
+    const dot=cur?'<span class="now-dot"></span>':'';
+    html+=`<div class="${cls}" data-type="monthly" data-period="${period}" onclick="selectPeriod(this)">${m}월${dot}</div>`;
+  }
+  document.getElementById('monthlyList').innerHTML = html;
+}
+function renderWeekly() {
+  const fridays=fridaysUntilToday(new Date().getFullYear()).slice(0,6);
+  const curKey=toKey(thisWeekFriday()); let html='';
+  fridays.forEach(fri => {
+    const {sat}=weekRange(fri); const period=toKey(fri); const cur=period===curKey;
+    const cls=['sb-item','sub',cur?'active':''].filter(Boolean).join(' ');
+    const dot=cur?'<span class="now-dot"></span>':'';
+    html+=`<div class="${cls}" data-type="weekly" data-period="${period}" onclick="selectPeriod(this)">
+             ${toDisplay(fri)}${dot}<span class="week-range">${toDisplay(sat)}~${toDisplay(fri)}</span>
+           </div>`;
+  });
+  document.getElementById('weeklyList').innerHTML = html;
 }
 
-// ── 세션/기억 체크 ─────────────────────────────────
-(function checkSession() {
-  // 1. 세션 살아있으면 바로 진입
-  if (sessionStorage.getItem('loggedIn') === '1') {
-    document.getElementById('loginOverlay').style.display = 'none';
-    const id  = sessionStorage.getItem('userId') || '';
-    const btn = document.querySelector('.logout-btn');
-    if (btn && id) btn.textContent = `🔒 ${id} · 로그아웃`;
-    // ★ 세션 유지 상태 → 권한 재적용 + iframe 전송
-    const savedRole = sessionStorage.getItem('userRole') || '';
-    setTimeout(() => {
-      if (savedRole) applyRolePermissions(savedRole);
-      const frame = document.getElementById('mainFrame');
-      if (frame) pushRoleToFrame(frame);
-    }, 500);
-    return;
-  }
+// ── 달력 ──
+let calYear, calMonth, calHoverFri=null, calSelectedFri=null;
+function toggleCal() { const p=document.getElementById('calPopup'); p.classList.toggle('open'); if(p.classList.contains('open')) renderCal(); }
+function calMove(dir) { calMonth+=dir; if(calMonth<0){calMonth=11;calYear--;} if(calMonth>11){calMonth=0;calYear++;} renderCal(); }
+function snapToFriday(d) { const day=d.getDay(); const diff=day===6?6:(5-day); const fri=new Date(d); fri.setDate(d.getDate()+diff); return fri; }
+function renderCal() {
+  document.getElementById('calMonthLabel').textContent=`${calYear}년 ${calMonth+1}월`;
+  const grid=document.getElementById('calGrid'); const today=new Date(); today.setHours(0,0,0,0);
+  const firstDay=new Date(calYear,calMonth,1).getDay(); const lastDate=new Date(calYear,calMonth+1,0).getDate();
+  let cells=[]; const prevLast=new Date(calYear,calMonth,0).getDate();
+  for(let i=firstDay-1;i>=0;i--) cells.push({day:prevLast-i,cur:false});
+  for(let d=1;d<=lastDate;d++) cells.push({day:d,cur:true});
+  const tail=7-(cells.length%7); if(tail<7) for(let d=1;d<=tail;d++) cells.push({day:d,cur:false});
+  let html='';
+  cells.forEach((c,i)=>{
+    const dow=i%7;
+    if(!c.cur){html+=`<div class="cal-cell other-month empty">${c.day}</div>`;return;}
+    const date=new Date(calYear,calMonth,c.day); date.setHours(0,0,0,0);
+    const fri=snapToFriday(date); const friKey=toKey(fri); const {sat}=weekRange(fri);
+    const inHover=calHoverFri&&friKey===toKey(calHoverFri);
+    const inSel=calSelectedFri&&friKey===toKey(calSelectedFri);
+    const isFriEnd=dow===5; const isToday=date.getTime()===today.getTime();
+    let cls='cal-cell';
+    if(dow===0)cls+=' sun'; if(dow===6)cls+=' sat';
+    if(inHover)cls+=' week-hover'; if(inHover&&isFriEnd)cls+=' fri-end';
+    if(inSel&&!inHover)cls+=' week-selected'; if(inSel&&!inHover&&isFriEnd)cls+=' fri-end';
+    if(isToday)cls+=' today-marker';
+    html+=`<div class="${cls}" onmouseenter="calHover('${friKey}')" onmouseleave="calUnhover()" onclick="selectCalWeek('${friKey}')">${c.day}</div>`;
+  });
+  grid.innerHTML=html;
+}
+function calHover(k){calHoverFri=new Date(k);renderCal();}
+function calUnhover(){calHoverFri=null;renderCal();}
+function selectCalWeek(friKey) {
+  const fri=new Date(friKey); const {sat}=weekRange(fri); calSelectedFri=fri;
+  document.getElementById('calToggleLabel').textContent=`${toDisplay(fri)} (${toDisplay(sat)}~${toDisplay(fri)})`;
+  document.getElementById('calResult').textContent=`▶ ${fri.getFullYear()}.${pad(fri.getMonth()+1)}.${pad(fri.getDate())} (금)`;
+  document.getElementById('calPopup').classList.remove('open'); renderCal();
+  document.querySelectorAll('.sb-item').forEach(i=>i.classList.remove('active'));
+  const match=document.querySelector(`.sb-item[data-period="${friKey}"]`);
+  if(match) match.classList.add('active');
+  state.type='weekly'; state.period=friKey; updateFrame(); updateHeader();
+}
+function selectPeriod(el) {
+  document.querySelectorAll('.sb-item').forEach(i=>i.classList.remove('active'));
+  el.classList.add('active');
+  state.type=el.dataset.type; state.period=el.dataset.period;
+  updateFrame(); updateHeader();
+}
 
-  // 1-1. 세션 복원 시 권한 재적용
-  const savedRole = sessionStorage.getItem('userRole');
-  if (savedRole) {
-    setTimeout(() => applyRolePermissions(savedRole), 0);
-  }
+function updateFrame() {
+  const base=TAB_MAP[state.tab]; if(!base) return;
+  const periodParam=toPeriodParam(state.type,state.period);
+  const url=`${base}?type=${encodeURIComponent(state.type)}&period=${encodeURIComponent(periodParam)}`;
+  const frame=document.getElementById('mainFrame');
+  frame.onload=()=>{ try{frame.contentWindow.postMessage({type:'SCRIPT_URL',url:SCRIPT_URL},'*');}catch(e){} if(typeof pushCSVToFrame==='function')pushCSVToFrame(); };
+  frame.src=url;
+}
+function updateHeader() {
+  const {type,period}=state; let label='';
+  if(type==='yearly') label=`${period}년 연간`;
+  else if(type==='monthly'){const[y,m]=period.split('-');label=`${y}년 기준 · ${parseInt(m)}월 마감`;}
+  else if(type==='weekly'){const fri=new Date(period);const{sat}=weekRange(fri);label=`주간 · ${toDisplay(sat)} ~ ${toDisplay(fri)}`;}
+  else if(type==='direct') label=`직접선택 · ${period}`;
+  const now=new Date();
+  document.getElementById('headerDate').textContent=`${label} · ${now.getFullYear()}.${pad(now.getMonth()+1)}.${pad(now.getDate())}`;
+}
 
-  // 2. 기억된 로그인 정보 불러오기
-  try {
-    const saved = localStorage.getItem(REMEMBER_KEY);
-    if (saved) {
-      const { id, pw } = JSON.parse(saved);
-      const sel = document.getElementById('loginId');
-      const pwEl = document.getElementById('loginPw');
-      if (sel)  sel.value  = id;
-      if (pwEl) pwEl.value = pw;
-      // 체크박스 ON 표시
-      rememberChecked = true;
-      const box  = document.getElementById('rememberChk');
-      const mark = document.getElementById('chkMark');
-      if (box)  box.classList.add('checked');
-      if (mark) mark.style.display = 'block';
-    }
-  } catch(e) {}
-})();
+function openTestServer() { window.open('https://shim0627.github.io/shim0627/','_blank'); }
 
-init();
+// ── 초기화 ──
+function init() {
+  renderMonthly(); renderWeekly();
+  const now=new Date(); calYear=now.getFullYear(); calMonth=now.getMonth();
 
-// ═══════════════════════════════════════════════════
-//  팀Tool CSV 데이터 공급자
-//  switchTab / toolNav 는 위에서 이미 정의되어 있으므로
-//  여기서는 CSV 로드 함수만 정의하고
-//  switchTab / toolNav 안에서 직접 호출
-// ═══════════════════════════════════════════════════
+  // 기본 탭: AI보고
+  const firstItem = document.querySelector('.nav-item[data-tab="AI보고"]');
+  if (firstItem) switchTab(firstItem);
 
+  state.type='weekly';
+  const fri=thisWeekFriday(); const friKey=toKey(fri); state.period=friKey;
+  document.querySelectorAll('#weeklyList .sb-item').forEach(el => el.classList.toggle('active', el.dataset.period===friKey));
+  document.getElementById('weeklyList').style.display='block';
+  updateHeader(); updateFrame();
+}
+
+// ═══════════════════════════════════════════
+//  CSV 공급자
+// ═══════════════════════════════════════════
 const toolDataChannel = new BroadcastChannel('as-tool-channel-v1');
-
-const isLocal = location.hostname === 'localhost' || location.hostname === '127.0.0.1';
 const CSV_URL = '/dashboard/data/가전마감.csv';
-
-let csvCache = null;
-let csvETag  = null;
+let csvCache=null, csvETag=null;
 
 function indexParseCSV(text) {
-  const rows = [];
-  let row = [], cur = '', inQ = false;
-  for (let i = 0; i < text.length; i++) {
-    const c = text[i], nc = text[i+1];
-    if (c === '"' && nc === '"')              { cur += '"'; i++; }
-    else if (c === '"')                        { inQ = !inQ; }
-    else if (c === ',' && !inQ)               { row.push(cur.trim()); cur = ''; }
-    else if ((c === '\n' || c === '\r') && !inQ) {
-      if (c === '\r' && nc === '\n') i++;
-      row.push(cur.trim()); rows.push(row); row = []; cur = '';
-    } else { cur += c; }
+  const rows=[]; let row=[],cur='',inQ=false;
+  for(let i=0;i<text.length;i++){
+    const c=text[i],nc=text[i+1];
+    if(c==='"'&&nc==='"'){cur+='"';i++;}
+    else if(c==='"'){inQ=!inQ;}
+    else if(c===','&&!inQ){row.push(cur.trim());cur='';}
+    else if((c==='\n'||c==='\r')&&!inQ){if(c==='\r'&&nc==='\n')i++;row.push(cur.trim());rows.push(row);row=[];cur='';}
+    else{cur+=c;}
   }
-  if (cur || row.length) { row.push(cur.trim()); rows.push(row); }
+  if(cur||row.length){row.push(cur.trim());rows.push(row);}
   return rows;
 }
-
-async function loadAndBroadcastCSV(force = false) {
+async function loadAndBroadcastCSV(force=false) {
   try {
-    if (!force && csvCache) {
-      const h = await fetch(CSV_URL, { method: 'HEAD', cache: 'no-cache' });
-      const et = h.headers.get('ETag') || h.headers.get('Last-Modified') || '';
-      if (et && et === csvETag) return;
-      csvETag = et;
+    if(!force&&csvCache){
+      const h=await fetch(CSV_URL,{method:'HEAD',cache:'no-cache'});
+      const et=h.headers.get('ETag')||h.headers.get('Last-Modified')||'';
+      if(et&&et===csvETag)return; csvETag=et;
     }
-    const res = await fetch(CSV_URL, { cache: 'no-cache' });
-    if (!res.ok) throw new Error(res.status);
-    csvETag  = res.headers.get('ETag') || res.headers.get('Last-Modified') || String(Date.now());
-    csvCache = indexParseCSV(await res.text());
-
-    toolDataChannel.postMessage({ type: 'CSV_DATA', rows: csvCache, loadedAt: new Date().toISOString() });
+    const res=await fetch(CSV_URL,{cache:'no-cache'});
+    if(!res.ok)throw new Error(res.status);
+    csvETag=res.headers.get('ETag')||res.headers.get('Last-Modified')||String(Date.now());
+    csvCache=indexParseCSV(await res.text());
+    toolDataChannel.postMessage({type:'CSV_DATA',rows:csvCache,loadedAt:new Date().toISOString()});
     pushCSVToFrame();
-    console.log('[index] CSV 송출:', csvCache.length - 1, '행');
-  } catch(e) { console.warn('[index] CSV 로드 실패:', e.message); }
+  } catch(e){console.warn('[index] CSV 로드 실패:',e.message);}
 }
-
 function pushCSVToFrame() {
-  if (!csvCache) return;
-  const frame = document.getElementById('mainFrame');
-  if (!frame || !frame.contentWindow) return;
-  try {
-    frame.contentWindow.postMessage({ type: 'CSV_DATA', rows: csvCache, loadedAt: new Date().toISOString() }, '*');
-  } catch(e) {}
+  if(!csvCache)return;
+  const frame=document.getElementById('mainFrame');
+  if(!frame||!frame.contentWindow)return;
+  try{frame.contentWindow.postMessage({type:'CSV_DATA',rows:csvCache,loadedAt:new Date().toISOString()},'*');}catch(e){}
 }
-
-// BroadcastChannel 릴레이 (AS1→AS3 등 툴간 연동)
-toolDataChannel.addEventListener('message', (e) => {
-  const d = e.data || {};
-  if (d.type === 'CSV_DATA') return; // 루프 방지
-  const frame = document.getElementById('mainFrame');
-  if (frame && frame.contentWindow) {
-    try { frame.contentWindow.postMessage(d, '*'); } catch(e) {}
-  }
+toolDataChannel.addEventListener('message',(e)=>{
+  const d=e.data||{}; if(d.type==='CSV_DATA')return;
+  const frame=document.getElementById('mainFrame');
+  if(frame&&frame.contentWindow){try{frame.contentWindow.postMessage(d,'*');}catch(e){}}
 });
+setInterval(()=>{if(state.tab==='팀Tool')loadAndBroadcastCSV(false);},5*60*1000);
 
-// 5분마다 ETag 폴링
-setInterval(() => { if (state.tab === '팀Tool') loadAndBroadcastCSV(false); }, 5 * 60 * 1000);
+init();
 </script>
-
 </body>
 </html>
