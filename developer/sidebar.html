@@ -1,0 +1,549 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width,initial-scale=1.0">
+<title>사이드바 메뉴 구성</title>
+<style>
+* { box-sizing: border-box; margin: 0; padding: 0; }
+body { background: #0d1825; color: #c8ddf0; font-family: 'Malgun Gothic', sans-serif; font-size: 13px; height: 100vh; display: flex; flex-direction: column; overflow: hidden; }
+
+/* ── 상단 툴바 ── */
+.toolbar {
+  display: flex; align-items: center; gap: 10px;
+  padding: 10px 18px; background: #111e35;
+  border-bottom: 1px solid #1e3a5a; flex-shrink: 0;
+  flex-wrap: wrap;
+}
+.toolbar-title { font-size: 14px; font-weight: 700; color: #e0eefc; margin-right: 8px; }
+.tab-select {
+  background: #1a2e4a; border: 1px solid #2a4060; color: #c8ddf0;
+  padding: 5px 10px; border-radius: 5px; font-family: inherit;
+  font-size: 12.5px; cursor: pointer; outline: none;
+}
+.tab-select:focus { border-color: #4a9fd4; }
+
+.btn {
+  display: inline-flex; align-items: center; gap: 5px;
+  padding: 5px 13px; border-radius: 5px; font-size: 12px;
+  font-weight: 600; cursor: pointer; border: none;
+  font-family: inherit; transition: background 0.15s; white-space: nowrap;
+}
+.btn-primary { background: #2356a8; color: #fff; }
+.btn-primary:hover { background: #1a3a7a; }
+.btn-success { background: #1a4a2a; border: 1px solid #2a7a3a; color: #5be87a; }
+.btn-success:hover { background: #205a30; }
+.btn-danger  { background: #3a1a1a; border: 1px solid #6a2a2a; color: #e87a7a; }
+.btn-danger:hover  { background: #4a2020; }
+.btn-ghost   { background: #1a2e4a; border: 1px solid #2a4060; color: #a8c4df; }
+.btn-ghost:hover   { background: #223650; color: #e0eefc; }
+
+/* ── 레이아웃 ── */
+.main { display: flex; flex: 1; overflow: hidden; gap: 0; }
+
+/* 좌: 항목 목록 / 우: 행 편집 */
+.panel-left {
+  width: 260px; flex-shrink: 0; background: #0e1a2e;
+  border-right: 1px solid #1e3a5a; display: flex; flex-direction: column;
+  overflow: hidden;
+}
+.panel-left-header {
+  padding: 10px 14px 8px; font-size: 11px; font-weight: 700;
+  color: #7a9ec0; letter-spacing: 1px; text-transform: uppercase;
+  border-bottom: 1px solid #1e3a5a; display: flex; align-items: center; justify-content: space-between;
+}
+.row-list { flex: 1; overflow-y: auto; padding: 6px 0; }
+.row-item {
+  display: flex; align-items: center; gap: 6px;
+  padding: 6px 12px; cursor: pointer;
+  transition: background 0.1s; position: relative;
+}
+.row-item:hover { background: #1a2e4a; }
+.row-item.active { background: #162640; }
+.row-item .row-drag { color: #3a5a7a; cursor: grab; font-size: 14px; flex-shrink: 0; }
+.row-item .row-order { font-size: 10px; color: #4a6a8a; width: 20px; text-align: center; flex-shrink: 0; }
+.row-item .row-badge {
+  font-size: 9.5px; padding: 1px 5px; border-radius: 3px;
+  font-weight: 600; flex-shrink: 0; white-space: nowrap;
+}
+.badge-대분류  { background: #1a3a2a; color: #5be87a; border: 1px solid #2a5a3a; }
+.badge-소분류  { background: #162640; color: #5bb8f5; border: 1px solid #2a4060; }
+.badge-구분선  { background: #2a2a1a; color: #c8b06a; border: 1px solid #4a4a2a; }
+.badge-외부링크{ background: #2a1a3a; color: #c87ae8; border: 1px solid #4a2a5a; }
+.badge-코딩요청{ background: #1a2e50; color: #4fc3f7; border: 1px solid #2a4870; }
+.row-item .row-name { font-size: 12px; color: #a8c4df; flex: 1; min-width: 0; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+.row-item.disabled .row-name { color: #3a5a7a; text-decoration: line-through; }
+.row-item .row-del {
+  opacity: 0; font-size: 14px; color: #6a3a3a; cursor: pointer;
+  padding: 2px 4px; border-radius: 3px; transition: opacity 0.1s;
+  flex-shrink: 0;
+}
+.row-item:hover .row-del { opacity: 1; }
+.row-item .row-del:hover { color: #e87a7a; background: #3a1a1a; }
+
+/* 우: 편집 패널 */
+.panel-right {
+  flex: 1; overflow-y: auto; padding: 20px 24px;
+}
+.panel-right-empty {
+  display: flex; flex-direction: column;
+  align-items: center; justify-content: center;
+  height: 100%; gap: 10px; color: #3a5a7a;
+}
+.panel-right-empty .ico { font-size: 36px; }
+
+.form-section { margin-bottom: 20px; }
+.form-section-title {
+  font-size: 11px; font-weight: 700; color: #5a7a9a;
+  letter-spacing: 1px; text-transform: uppercase;
+  margin-bottom: 10px; padding-bottom: 5px;
+  border-bottom: 1px solid #1e3a5a;
+}
+.form-row { display: flex; gap: 10px; margin-bottom: 10px; align-items: flex-start; }
+.form-row.col1 { flex-direction: column; }
+.form-group { flex: 1; }
+.form-label {
+  display: block; font-size: 11px; color: #7a9ec0;
+  margin-bottom: 5px; font-weight: 600;
+}
+.form-input, .form-select {
+  width: 100%; background: #0e1a2e; border: 1px solid #2a4060;
+  color: #c8ddf0; padding: 7px 10px; font-size: 12.5px;
+  border-radius: 5px; outline: none; font-family: inherit;
+  transition: border-color 0.15s;
+}
+.form-input:focus, .form-select:focus { border-color: #4a9fd4; }
+.form-select { appearance: none; cursor: pointer; }
+.form-hint { font-size: 10.5px; color: #4a6a8a; margin-top: 4px; }
+
+.toggle-wrap { display: flex; align-items: center; gap: 8px; }
+.toggle-label { font-size: 12px; color: #a8c4df; cursor: pointer; }
+
+.form-footer { display: flex; justify-content: flex-end; gap: 8px; margin-top: 16px; border-top: 1px solid #1e3a5a; padding-top: 14px; }
+
+/* 프리뷰 */
+.preview-wrap {
+  background: #0e1a2e; border: 1px solid #1e3a5a; border-radius: 8px;
+  padding: 10px 0; min-width: 160px; max-width: 200px;
+}
+.preview-sb-label {
+  font-size: 10px; color: #7a9ec0; padding: 8px 14px 3px;
+  letter-spacing: 1px; font-weight: 700; text-transform: uppercase;
+}
+.preview-sb-item {
+  padding: 5px 14px; font-size: 12px; color: #a8c4df;
+}
+.preview-sb-item.sub { padding-left: 22px; font-size: 11.5px; color: #7a9ec0; }
+.preview-sb-divider { height: 1px; background: #1a2e4a; margin: 4px 14px; }
+
+/* 상태 메시지 */
+.status-bar {
+  padding: 6px 18px; font-size: 11.5px; flex-shrink: 0;
+  background: #0e1a2e; border-top: 1px solid #1e3a5a;
+  display: flex; align-items: center; gap: 8px; min-height: 32px;
+}
+.status-ok  { color: #5be87a; }
+.status-err { color: #e87a7a; }
+.status-loading { color: #5bb8f5; }
+
+/* 새 항목 추가 입력란 */
+.new-tab-row {
+  display: flex; gap: 6px; padding: 8px 12px;
+  border-top: 1px solid #1e3a5a;
+}
+.new-tab-input {
+  flex: 1; background: #111e35; border: 1px solid #2a4060;
+  color: #c8ddf0; padding: 5px 8px; font-size: 12px;
+  border-radius: 4px; outline: none; font-family: inherit;
+}
+.new-tab-input:focus { border-color: #4a9fd4; }
+
+/* 로딩 스피너 */
+.spinner { display: inline-block; width: 14px; height: 14px; border: 2px solid #2a4060; border-top-color: #4a9fd4; border-radius: 50%; animation: spin 0.7s linear infinite; }
+@keyframes spin { to { transform: rotate(360deg); } }
+</style>
+</head>
+<body>
+
+<!-- ── 상단 툴바 ── -->
+<div class="toolbar">
+  <span class="toolbar-title">📋 사이드바 메뉴 구성</span>
+
+  <label style="font-size:11px;color:#7a9ec0;">페이지 선택</label>
+  <select class="tab-select" id="tabSelect" onchange="onTabChange()">
+    <option value="">-- 로딩 중 --</option>
+  </select>
+
+  <button class="btn btn-primary" onclick="addNewRow()">＋ 항목 추가</button>
+  <button class="btn btn-success" onclick="saveAll()">💾 전체 저장</button>
+  <button class="btn btn-ghost"   onclick="loadAll()">↺ 새로고침</button>
+  <div style="flex:1;"></div>
+  <span style="font-size:11px;color:#4a6a8a;">구글시트 &rarr; 인덱스 자동 반영</span>
+</div>
+
+<!-- ── 메인 ── -->
+<div class="main">
+
+  <!-- 좌: 항목 행 목록 -->
+  <div class="panel-left">
+    <div class="panel-left-header">
+      <span>항목 목록</span>
+      <span id="rowCount" style="font-size:10px;color:#4a6a8a;"></span>
+    </div>
+
+    <div class="row-list" id="rowList">
+      <div style="padding:20px;text-align:center;color:#3a5a7a;">페이지를 선택하세요</div>
+    </div>
+
+    <!-- 새 탭(항목) 추가 -->
+    <div class="new-tab-row">
+      <input type="text" class="new-tab-input" id="newTabInput" placeholder="새 항목명 (예: 현황관리)" />
+      <button class="btn btn-ghost" style="padding:5px 10px;" onclick="addNewTab()">추가</button>
+    </div>
+  </div>
+
+  <!-- 우: 편집 -->
+  <div class="panel-right" id="panelRight">
+    <div class="panel-right-empty">
+      <div class="ico">📝</div>
+      <div style="font-size:13px;color:#5a7a9a;">항목을 선택하거나 새 항목을 추가하세요</div>
+    </div>
+  </div>
+
+</div>
+
+<!-- ── 상태 바 ── -->
+<div class="status-bar" id="statusBar">
+  <span id="statusMsg" class="status-loading">
+    <span class="spinner"></span>&nbsp; 데이터 로딩 중...
+  </span>
+</div>
+
+<script>
+// ── GAS URL (index.html과 동일하게 부모에서 전달받거나 직접 지정) ──
+let SCRIPT_URL = '';
+
+// 부모(index.html) iframe postMessage로 URL을 받거나,
+// URL 파라미터로 직접 전달
+window.addEventListener('message', e => {
+  if (e.data && e.data.type === 'SCRIPT_URL') {
+    SCRIPT_URL = e.data.url;
+    loadAll();
+  }
+});
+
+const params = new URLSearchParams(location.search);
+if (params.get('gasUrl')) {
+  SCRIPT_URL = decodeURIComponent(params.get('gasUrl'));
+  loadAll();
+}
+
+// ── 상태 ──
+let allRows  = [];  // 전체 데이터
+let allTabs  = [];  // 항목 목록
+let curTab   = '';  // 현재 선택된 항목
+let editRow  = null; // 현재 편집 중인 행
+
+// ── GAS GET 헬퍼 ──
+async function gasGet(params) {
+  if (!SCRIPT_URL) { setStatus('⚠ GAS URL 없음 — 인덱스에서 이 페이지를 열어주세요', 'err'); return null; }
+  const qs = Object.entries(params)
+    .map(([k,v]) => `${encodeURIComponent(k)}=${encodeURIComponent(v)}`)
+    .join('&');
+  try {
+    const res  = await fetch(`${SCRIPT_URL}?${qs}`, { redirect: 'follow' });
+    const json = await res.json();
+    return json;
+  } catch(e) {
+    setStatus('네트워크 오류: ' + e.message, 'err');
+    return null;
+  }
+}
+
+// ── 상태 메시지 ──
+function setStatus(msg, type='ok') {
+  const el = document.getElementById('statusMsg');
+  el.className = 'status-' + type;
+  el.innerHTML = msg;
+}
+
+// ── 전체 로드 ──
+async function loadAll() {
+  setStatus('<span class="spinner"></span>&nbsp; 로딩 중...', 'loading');
+  const data = await gasGet({ action: 'getSidebarAll' });
+  if (!data || !data.ok) {
+    setStatus('로드 실패: ' + (data?.msg || ''), 'err');
+    return;
+  }
+  allRows = data.rows || [];
+  allTabs = data.tabs || [];
+
+  // 탭 셀렉트 업데이트
+  const sel = document.getElementById('tabSelect');
+  const prev = sel.value || curTab;
+  sel.innerHTML = '<option value="">— 항목 선택 —</option>';
+  allTabs.forEach(t => {
+    const opt = document.createElement('option');
+    opt.value = t; opt.textContent = t;
+    sel.appendChild(opt);
+  });
+  if (prev && allTabs.includes(prev)) sel.value = prev;
+  curTab = sel.value;
+  renderRowList();
+  setStatus(`✓ 총 ${allRows.length}개 행 로드 완료 (항목: ${allTabs.length}개)`, 'ok');
+}
+
+// ── 탭 변경 ──
+function onTabChange() {
+  curTab = document.getElementById('tabSelect').value;
+  editRow = null;
+  renderRowList();
+  renderEmptyEditor();
+}
+
+// ── 행 목록 렌더링 ──
+function renderRowList() {
+  const list = document.getElementById('rowList');
+  const rows = allRows.filter(r => r.item === curTab);
+  rows.sort((a,b) => a.order - b.order);
+  document.getElementById('rowCount').textContent = rows.length + '개';
+
+  if (!curTab) { list.innerHTML = '<div style="padding:20px;text-align:center;color:#3a5a7a;">항목을 선택하세요</div>'; return; }
+  if (!rows.length) { list.innerHTML = '<div style="padding:20px;text-align:center;color:#3a5a7a;">항목이 없습니다<br><small style="color:#2a4060;">위에서 ＋ 항목 추가를 누르세요</small></div>'; return; }
+
+  list.innerHTML = rows.map((r,i) => `
+    <div class="row-item ${r.enabled ? '' : 'disabled'} ${editRow && editRow.rowIdx === r.rowIdx ? 'active' : ''}"
+         onclick="selectRow(${r.rowIdx})" data-ridx="${r.rowIdx}">
+      <span class="row-order">${i+1}</span>
+      <span class="row-badge badge-${r.type}">${r.type}</span>
+      <span class="row-name">${r.name || '(구분선)'}</span>
+      <span class="row-del" onclick="deleteRow(event,${r.rowIdx})">✕</span>
+    </div>
+  `).join('');
+}
+
+// ── 행 선택 ──
+function selectRow(rowIdx) {
+  editRow = allRows.find(r => r.rowIdx === rowIdx) || null;
+  if (!editRow) return;
+  renderRowList();
+  renderEditor(editRow);
+}
+
+// ── 편집기 렌더링 ──
+function renderEditor(row) {
+  const right = document.getElementById('panelRight');
+  right.innerHTML = `
+    <div class="form-section">
+      <div class="form-section-title">행 편집 — rowIdx: ${row.rowIdx}</div>
+
+      <div class="form-row">
+        <div class="form-group">
+          <label class="form-label">항목 (탭명)</label>
+          <input type="text" class="form-input" id="fItem" value="${esc(row.item)}" placeholder="팀Tool">
+        </div>
+        <div class="form-group">
+          <label class="form-label">구분</label>
+          <select class="form-select" id="fType">
+            ${['대분류','소분류','구분선','외부링크','코딩요청'].map(t =>
+              `<option value="${t}" ${row.type===t?'selected':''}>${t}</option>`
+            ).join('')}
+          </select>
+        </div>
+      </div>
+
+      <div class="form-row">
+        <div class="form-group">
+          <label class="form-label">명칭</label>
+          <input type="text" class="form-input" id="fName" value="${esc(row.name)}" placeholder="표시될 이름">
+        </div>
+        <div class="form-group" style="max-width:70px;">
+          <label class="form-label">순서</label>
+          <input type="number" class="form-input" id="fOrder" value="${row.order}" min="1" style="text-align:center;">
+        </div>
+      </div>
+
+      <div class="form-row col1">
+        <div class="form-group">
+          <label class="form-label">URL / 경로</label>
+          <input type="text" class="form-input" id="fUrl" value="${esc(row.url)}" placeholder="tool/as7.html  또는  https://...">
+          <div class="form-hint">내부 경로: tool/파일.html  |  외부링크: https://...  |  대분류·구분선·코딩요청은 비워두세요</div>
+        </div>
+      </div>
+
+      <div class="form-row">
+        <div class="toggle-wrap">
+          <input type="checkbox" id="fEnabled" ${row.enabled?'checked':''}>
+          <label class="toggle-label" for="fEnabled">사용 (체크 해제 시 숨김)</label>
+        </div>
+      </div>
+
+      <div class="form-footer">
+        <button class="btn btn-ghost" onclick="renderEmptyEditor()">취소</button>
+        <button class="btn btn-primary" onclick="saveRow()">저장</button>
+      </div>
+    </div>
+
+    <div class="form-section">
+      <div class="form-section-title">미리보기</div>
+      <div style="display:flex;gap:12px;align-items:flex-start;">
+        <div class="preview-wrap" id="preview">
+          ${buildPreview(document.getElementById('tabSelect').value)}
+        </div>
+        <div style="font-size:11px;color:#4a6a8a;line-height:1.8;">
+          저장 후 인덱스 페이지에서<br>해당 탭을 다시 클릭하면<br>즉시 반영됩니다.
+        </div>
+      </div>
+    </div>
+  `;
+  // 실시간 미리보기 업데이트
+  ['fItem','fType','fName','fOrder','fUrl','fEnabled'].forEach(id => {
+    const el = document.getElementById(id);
+    if (el) el.addEventListener('change', updatePreview);
+  });
+}
+
+function renderEmptyEditor() {
+  editRow = null;
+  renderRowList();
+  document.getElementById('panelRight').innerHTML = `
+    <div class="panel-right-empty">
+      <div class="ico">📝</div>
+      <div style="font-size:13px;color:#5a7a9a;">좌측에서 항목을 선택하세요</div>
+    </div>`;
+}
+
+function esc(s) { return (s||'').replace(/"/g,'&quot;').replace(/</g,'&lt;'); }
+
+// ── 실시간 미리보기 ──
+function updatePreview() {
+  const preview = document.getElementById('preview');
+  if (preview) preview.innerHTML = buildPreview(document.getElementById('tabSelect').value);
+}
+
+function buildPreview(tab) {
+  const rows = allRows.filter(r => r.item === tab && r.enabled);
+  rows.sort((a,b) => a.order - b.order);
+  if (!rows.length) return '<div style="padding:10px 14px;color:#3a5a7a;font-size:11px;">항목 없음</div>';
+  return rows.map(r => {
+    if (r.type === '구분선')  return '<div class="preview-sb-divider"></div>';
+    if (r.type === '대분류')  return `<div class="preview-sb-label">${r.name}</div>`;
+    return `<div class="preview-sb-item sub">${r.name}</div>`;
+  }).join('');
+}
+
+// ── 행 저장 ──
+async function saveRow() {
+  if (!editRow) return;
+  const payload = {
+    action:  'saveSidebarRow',
+    rowIdx:  document.getElementById('fItem')    ? editRow.rowIdx : editRow.rowIdx,
+    item:    document.getElementById('fItem').value.trim(),
+    type:    document.getElementById('fType').value,
+    name:    document.getElementById('fName').value.trim(),
+    url:     document.getElementById('fUrl').value.trim(),
+    order:   parseInt(document.getElementById('fOrder').value) || editRow.order,
+    enabled: document.getElementById('fEnabled').checked ? 'TRUE' : 'FALSE'
+  };
+  setStatus('<span class="spinner"></span>&nbsp; 저장 중...', 'loading');
+  const res = await gasGet(payload);
+  if (res && res.ok) {
+    setStatus('✓ 저장 완료', 'ok');
+    // 부모(index.html)에 캐시 무효화 신호
+    try { window.parent.postMessage({ type: 'SIDEBAR_UPDATED', tab: editRow?.item || curTab }, '*'); } catch(e){}
+    await loadAll();
+    if (editRow) selectRow(editRow.rowIdx);
+  } else {
+    setStatus('저장 실패: ' + (res?.msg || ''), 'err');
+  }
+}
+
+// ── 전체 저장 (순서 정리 후 저장) ──
+async function saveAll() {
+  setStatus('<span class="spinner"></span>&nbsp; 전체 저장 중...', 'loading');
+  // 현재 목록 순서를 index 기준으로 재할당
+  const rows = allRows.filter(r => r.item === curTab);
+  rows.sort((a,b) => a.order - b.order);
+  const orders = rows.map((r,i) => ({ rowIdx: r.rowIdx, order: i+1 }));
+  if (orders.length) {
+    const res = await gasGet({ action: 'saveSidebarOrder', ordersJson: JSON.stringify(orders) });
+    if (!res || !res.ok) { setStatus('저장 실패', 'err'); return; }
+  }
+  setStatus('✓ 전체 저장 완료', 'ok');
+  await loadAll();
+}
+
+// ── 행 삭제 ──
+async function deleteRow(evt, rowIdx) {
+  evt.stopPropagation();
+  if (!confirm('이 항목을 삭제할까요?')) return;
+  setStatus('<span class="spinner"></span>&nbsp; 삭제 중...', 'loading');
+  const res = await gasGet({ action: 'deleteSidebarRow', rowIdx });
+  if (res && res.ok) {
+    setStatus('✓ 삭제 완료', 'ok');
+    if (editRow && editRow.rowIdx === rowIdx) renderEmptyEditor();
+    await loadAll();
+  } else {
+    setStatus('삭제 실패: ' + (res?.msg||''), 'err');
+  }
+}
+
+// ── 새 행 추가 ──
+async function addNewRow() {
+  if (!curTab) { alert('항목(탭)을 먼저 선택하세요'); return; }
+  const rows   = allRows.filter(r => r.item === curTab);
+  const maxOrd = rows.reduce((m,r) => Math.max(m, r.order), 0);
+  setStatus('<span class="spinner"></span>&nbsp; 추가 중...', 'loading');
+  const res = await gasGet({
+    action: 'saveSidebarRow', rowIdx: 0,
+    item: curTab, type: '소분류', name: '새 항목', url: '', order: maxOrd+1, enabled: 'TRUE'
+  });
+  if (res && res.ok) {
+    setStatus('✓ 추가 완료 — 명칭과 URL을 수정하세요', 'ok');
+    await loadAll();
+    // 방금 추가된 가장 마지막 행 선택
+    const newRows = allRows.filter(r => r.item === curTab);
+    newRows.sort((a,b) => a.order - b.order);
+    if (newRows.length) selectRow(newRows[newRows.length-1].rowIdx);
+  } else {
+    setStatus('추가 실패: ' + (res?.msg||''), 'err');
+  }
+}
+
+// ── 새 탭(항목) 추가 ──
+async function addNewTab() {
+  const inp = document.getElementById('newTabInput');
+  const tab = inp.value.trim();
+  if (!tab) { inp.focus(); return; }
+  if (allTabs.includes(tab)) { alert('이미 존재하는 항목명입니다'); return; }
+  setStatus('<span class="spinner"></span>&nbsp; 항목 생성 중...', 'loading');
+  const res = await gasGet({
+    action: 'saveSidebarRow', rowIdx: 0,
+    item: tab, type: '대분류', name: tab, url: '', order: 1, enabled: 'TRUE'
+  });
+  if (res && res.ok) {
+    inp.value = '';
+    setStatus(`✓ 항목 "${tab}" 생성 완료`, 'ok');
+    await loadAll();
+    document.getElementById('tabSelect').value = tab;
+    onTabChange();
+  } else {
+    setStatus('생성 실패: ' + (res?.msg||''), 'err');
+  }
+}
+
+// ── index.html 의 iframe 로드 시 SCRIPT_URL 받기 대기 ──
+// (페이지 직접 접근 시) URL 파라미터에서 받기
+(function() {
+  const u = new URLSearchParams(location.search).get('gasUrl');
+  if (u) { SCRIPT_URL = decodeURIComponent(u); loadAll(); }
+  else {
+    // 부모로부터 postMessage 대기 (3초)
+    setTimeout(() => {
+      if (!SCRIPT_URL) setStatus('⚠ GAS URL을 받지 못했습니다. 인덱스에서 개발자 → 메뉴구성으로 진입해주세요', 'err');
+    }, 3000);
+  }
+})();
+</script>
+</body>
+</html>
