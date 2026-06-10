@@ -739,18 +739,12 @@ async function main() {
 main();
 </script>
 
+
 <!-- ★ 카드 권한 제어 모듈 (index → postMessage 수신) -->
 <script>/* card-perm-core-injected */
 /**
  * card-perm-core.js
  * 모든 페이지에 인라인으로 삽입되는 카드 권한 제어 모듈
- * ─────────────────────────────────────────────────────────
- * 동작 방식:
- *  1. index.html이 postMessage({type:'ROLE_INFO', ...})로 권한 전송
- *  2. 각 페이지는 이 모듈을 통해 카드에 설정 아이콘 주입
- *  3. 관리자/dev만 설정 아이콘 표시 → 클릭 시 등급 선택 드롭다운
- *  4. 카드 등급 미달 시 내용 블라인드 처리
- *  5. 설정 변경 → index로 postMessage({type:'SAVE_CARD_PERM'}) 전송
  */
 (function() {
   'use strict';
@@ -759,29 +753,25 @@ main();
   let _role      = '';
   let _roleLevel = 0;
   let _isAdmin   = false;
-  let _cardPerms = {};       // { pageId: { cardId: minRole } }
+  let _cardPerms = {};
   let _roleLevelMap = { admin:4, leader:3, user:2, affiliate:1 };
   let _roleLabels   = { admin:'관리자', leader:'리더급', user:'사용자', affiliate:'계열사' };
   let _pageId    = '';
   let _cardSeq   = 0;
   let _activeDropdown = null;
+  let _roleReceived   = false;  // ★ ROLE_INFO 수신 여부
 
-  // ── pageId 결정 (파일명 기반) ─────────────────────
+  // ── pageId 결정 ───────────────────────────────────
   function getPageId() {
-    const path = location.pathname;
-    const file = path.split('/').pop().replace('.html','') || 'unknown';
+    const file = location.pathname.split('/').pop().replace('.html','') || 'unknown';
     return file;
   }
-
-  // ── role 레벨 계산 ────────────────────────────────
-  function myLevel() { return _roleLevel; }
 
   // ── 카드에 data-card-id 자동 부여 ────────────────
   function assignCardIds() {
     document.querySelectorAll('.card:not([data-card-id])').forEach(card => {
       _cardSeq++;
-      // 카드 제목을 id 기반으로 사용 (더 안정적)
-      const titleEl = card.querySelector('.card-title');
+      const titleEl   = card.querySelector('.card-title');
       const titleText = titleEl ? titleEl.textContent.trim().replace(/\s+/g,'_') : '';
       const id = titleText
         ? `${_pageId}__${titleText.substring(0,30)}`
@@ -790,16 +780,20 @@ main();
     });
   }
 
-  // ── 설정 아이콘 삽입 ──────────────────────────────
+  // ── 설정 버튼 전부 제거 ───────────────────────────
+  function removeAllSettingIcons() {
+    document.querySelectorAll('.card-perm-btn').forEach(btn => btn.remove());
+    if (_activeDropdown) { _activeDropdown.remove(); _activeDropdown = null; }
+  }
+
+  // ── 설정 아이콘 삽입 (관리자만) ───────────────────
   function injectSettingIcons() {
-    if (!_isAdmin) return;
+    if (!_isAdmin) return;  // ★ 비관리자면 아무것도 안 함
 
     document.querySelectorAll('.card[data-card-id]').forEach(card => {
-      // 이미 있으면 스킵
-      if (card.querySelector('.card-perm-btn')) return;
+      if (card.querySelector('.card-perm-btn')) return;  // 이미 있으면 스킵
 
       const cardId = card.getAttribute('data-card-id');
-      const currentMin = (_cardPerms[_pageId] || {})[cardId] || 'affiliate';
 
       const btn = document.createElement('button');
       btn.className = 'card-perm-btn';
@@ -813,10 +807,9 @@ main();
       `;
       btn.addEventListener('click', (e) => {
         e.stopPropagation();
-        showPermDropdown(btn, cardId, currentMin);
+        showPermDropdown(btn, cardId);
       });
 
-      // position:relative 보장
       const cs = getComputedStyle(card);
       if (cs.position === 'static') card.style.position = 'relative';
       card.appendChild(btn);
@@ -824,8 +817,7 @@ main();
   }
 
   // ── 드롭다운 표시 ─────────────────────────────────
-  function showPermDropdown(btn, cardId, currentMin) {
-    // 기존 닫기
+  function showPermDropdown(btn, cardId) {
     if (_activeDropdown) { _activeDropdown.remove(); _activeDropdown = null; }
 
     const dropdown = document.createElement('div');
@@ -852,19 +844,15 @@ main();
       item.addEventListener('click', (e) => {
         e.stopPropagation();
         saveCardPerm(cardId, r.key);
-        // 버튼 현재 권한 업데이트
-        btn._currentMin = r.key;
         dropdown.remove();
         _activeDropdown = null;
       });
       dropdown.appendChild(item);
     });
 
-    // 위치: 버튼 아래
     btn.parentElement.appendChild(dropdown);
     _activeDropdown = dropdown;
 
-    // 화면 밖 넘침 방지
     const rect = dropdown.getBoundingClientRect();
     if (rect.right > window.innerWidth - 10) {
       dropdown.style.right = '0';
@@ -877,7 +865,6 @@ main();
     if (!_cardPerms[_pageId]) _cardPerms[_pageId] = {};
     _cardPerms[_pageId][cardId] = minRole;
 
-    // index로 전송 (저장 + 브로드캐스트)
     window.parent.postMessage({
       type:    'SAVE_CARD_PERM',
       pageId:  _pageId,
@@ -885,18 +872,16 @@ main();
       minRole: minRole,
     }, '*');
 
-    // 즉시 블라인드 재적용
     applyBlind();
   }
 
   // ── 블라인드 처리 ─────────────────────────────────
   function applyBlind() {
     document.querySelectorAll('.card[data-card-id]').forEach(card => {
-      const cardId = card.getAttribute('data-card-id');
+      const cardId  = card.getAttribute('data-card-id');
       const minRole = (_cardPerms[_pageId] || {})[cardId] || 'affiliate';
       const required = _roleLevelMap[minRole] || 1;
-      const mine = myLevel();
-      const canView = mine >= required;
+      const canView  = _roleLevel >= required;
 
       let blind = card.querySelector('.card-blind-overlay');
 
@@ -924,7 +909,6 @@ main();
     const style = document.createElement('style');
     style.id = 'card-perm-styles';
     style.textContent = `
-      /* ── 설정 버튼 ── */
       .card-perm-btn {
         position: absolute;
         top: 8px;
@@ -949,8 +933,6 @@ main();
         color: #fff;
         border-color: #4a9fd4;
       }
-
-      /* ── 드롭다운 ── */
       .card-perm-dropdown {
         position: absolute;
         top: 36px;
@@ -994,8 +976,6 @@ main();
       .cpd-leader    { background: #f0a030; }
       .cpd-user      { background: #40b870; }
       .cpd-affiliate { background: #6090d8; }
-
-      /* ── 블라인드 오버레이 ── */
       .card-blind-overlay {
         position: absolute;
         inset: 0;
@@ -1025,10 +1005,10 @@ main();
     document.head.appendChild(style);
   }
 
-  // ── 전체 재적용 (카드 증가 대응) ─────────────────
+  // ── 전체 재적용 ───────────────────────────────────
   function refresh() {
     assignCardIds();
-    injectSettingIcons();
+    injectSettingIcons();  // _isAdmin=false면 내부에서 즉시 return
     applyBlind();
   }
 
@@ -1036,12 +1016,18 @@ main();
   window.addEventListener('message', function(e) {
     const d = e.data || {};
     if (d.type === 'ROLE_INFO') {
-      _role         = d.role       || '';
-      _roleLevel    = d.roleLevel  || 0;
-      _isAdmin      = d.isAdmin    || false;
-      _cardPerms    = d.cardPerms  || {};
+      _role         = d.role        || '';
+      _roleLevel    = d.roleLevel   || 0;
+      _isAdmin      = d.isAdmin     || false;
+      _cardPerms    = d.cardPerms   || {};
       _roleLevelMap = d.roleLevelMap || _roleLevelMap;
       _roleLabels   = d.roleLabels  || _roleLabels;
+      _roleReceived = true;
+
+      // ★ 권한 수신마다 버튼 전부 초기화 후 재판단
+      // 비관리자: removeAll 후 injectSettingIcons가 아무것도 안 함 → 버튼 없음
+      // 관리자:   removeAll 후 재삽입
+      removeAllSettingIcons();
       refresh();
     }
   });
@@ -1051,14 +1037,15 @@ main();
     _pageId = getPageId();
     injectStyles();
 
-    // MutationObserver: 동적으로 카드 추가될 때 재적용
+    // MutationObserver: ROLE_INFO 수신 후에만 동작
     const observer = new MutationObserver(() => {
+      if (!_roleReceived) return;  // ★ 권한 미수신 시 무시
       const newCards = document.querySelectorAll('.card:not([data-card-id])');
       if (newCards.length > 0) refresh();
     });
     observer.observe(document.body, { childList: true, subtree: true });
 
-    // 드롭다운 외부 클릭 시 닫기
+    // 드롭다운 외부 클릭 닫기
     document.addEventListener('click', () => {
       if (_activeDropdown) { _activeDropdown.remove(); _activeDropdown = null; }
     });
@@ -1070,7 +1057,6 @@ main();
     init();
   }
 
-  // 외부 접근용
   window.CardPerm = { refresh };
 
 })();
