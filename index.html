@@ -231,6 +231,7 @@ body { background: #1a2e50; font-family: 'Malgun Gothic', '맑은 고딕', sans-
       <div class="login-input-wrap login-select-wrap">
         <span style="position:absolute;left:11px;top:50%;transform:translateY(-50%);font-size:15px;line-height:1;pointer-events:none;z-index:1;">👤</span>
         <select class="login-input" id="loginId" autocomplete="username">
+          <option value="관리자">관리자</option>
           <option value="리더급">리더급</option>
           <option value="꿈비">꿈비</option>
           <option value="에르모어">에르모어</option>
@@ -276,6 +277,9 @@ body { background: #1a2e50; font-family: 'Malgun Gothic', '맑은 고딕', sans-
   <div class="tab" data-tab="건별보고" onclick="switchTab(this)">건별보고</div>
   <div class="tab" data-tab="팀Tool"   onclick="switchTab(this)">팀Tool ✓</div>
   <div class="tab" data-tab="개발자"   onclick="switchTab(this)">개발자</div>
+  <button onclick="openTestServer()" title="테스트서버 열기" style="margin-left:auto;height:26px;display:flex;align-items:center;gap:6px;background:#1e4a2a;border:1px solid #2e7a3e;color:#5be87a;padding:0 12px;border-radius:4px;font-size:12px;font-weight:600;cursor:pointer;font-family:inherit;white-space:nowrap;transition:background 0.15s;" onmouseenter="this.style.background='#256032'" onmouseleave="this.style.background='#1e4a2a'">
+    <span style="font-size:14px;">🖥</span> 테스트서버
+  </button>
 </div>
 
 <div class="main">
@@ -317,6 +321,17 @@ body { background: #1a2e50; font-family: 'Malgun Gothic', '맑은 고딕', sans-
     </div>
 
     <!-- ── 팀Tool 전용 사이드바 ── -->
+    <!-- ── 개발자 전용 사이드바 ── -->
+    <div id="devSidebar" style="display:none;">
+      <div class="sb-label">계정설정</div>
+      <div class="sb-item" onclick="devNav('developer/account.html', this)">계정설정</div>
+      <div class="sb-item" onclick="devNav('developer/permission.html', this)">권한설정</div>
+      <div class="sb-divider"></div>
+      <div class="sb-label">메뉴설정</div>
+      <div class="sb-item" onclick="devNav('developer/webinfo.html', this)">웹구성정보</div>
+      <div class="sb-item" onclick="devNav('developer/menuconfig.html', this)">메뉴구성</div>
+    </div>
+
     <!-- ── 건별보고 전용 사이드바 ── -->
     <div id="onceSidebar" style="display:none;">
       <div class="sb-label">건별보고</div>
@@ -410,7 +425,7 @@ const TAB_MAP = {
   'AI보고':   'report/ai보고.html',
   '상담분석':  'report/채널톡보고.html',
   '팀Tool':   'report/팀Tool.html',
-  '개발자':   'report/개발자.html',
+  '개발자':   'developer/account.html',
 };
 
 let state = {
@@ -707,13 +722,15 @@ function switchTab(el) {
   el.classList.add('active');
   state.tab = el.dataset.tab;
 
-  const isToolTab  = state.tab === '팀Tool' || state.tab === '개발자';
+  const isToolTab  = state.tab === '팀Tool';
+  const isDevTab   = state.tab === '개발자';
   const isKpiTab   = state.tab === '주요kpi';
   const isOnceTab  = state.tab === '건별보고';
 
-  document.getElementById('dashSidebar').style.display  = (isToolTab || isOnceTab) ? 'none' : 'block';
+  document.getElementById('dashSidebar').style.display  = (isToolTab || isOnceTab || isDevTab) ? 'none' : 'block';
   document.getElementById('toolSidebar').style.display  = isToolTab ? 'block' : 'none';
   document.getElementById('onceSidebar').style.display  = isOnceTab ? 'block' : 'none';
+  document.getElementById('devSidebar').style.display   = isDevTab  ? 'block' : 'none';
 
   // 주요KPI: 월간/주간/직접선택 숨김, 연간만 표시
   const monthly  = document.getElementById('monthlyList');
@@ -751,9 +768,10 @@ function switchTab(el) {
 
   if (isOnceTab) {
     onceNav('report/once/allstain.html', null);
+  } else if (isDevTab) {
+    devNav('developer/account.html', null);
   } else if (isToolTab) {
-    if (state.tab === '팀Tool') toolNav('tool/tool_main.html', null);
-    else if (state.tab === '개발자') toolNav('report/개발자.html', null);
+    toolNav('tool/tool_main.html', null);
     setTimeout(() => loadAndBroadcastCSV(false), 0);
   } else {
     updateFrame();
@@ -762,12 +780,27 @@ function switchTab(el) {
 }
 
 // 팀Tool 내 메뉴 이동
+function devNav(path, el) {
+  if (el) {
+    document.querySelectorAll('#devSidebar .sb-item').forEach(i => i.classList.remove('active'));
+    el.classList.add('active');
+  }
+  const role = sessionStorage.getItem('userRole') || '';
+  // 읽기전용 여부를 URL 파라미터로 전달
+  const readOnly = role === 'leader' ? '?readonly=1' : '';
+  const frame = document.getElementById('mainFrame');
+  frame.onload = () => pushRoleToFrame(frame);
+  frame.src = path + readOnly;
+}
+
 function onceNav(path, el) {
   if (el) {
     document.querySelectorAll('#onceSidebar .sb-item').forEach(i => i.classList.remove('active'));
     el.classList.add('active');
   }
-  document.getElementById('mainFrame').src = path;
+  const frame = document.getElementById('mainFrame');
+  frame.onload = () => pushRoleToFrame(frame);
+  frame.src = path;
 }
 
 function toolNav(path, el) {
@@ -780,9 +813,11 @@ function toolNav(path, el) {
   // 개발자 로그인 시 ?dev=1 파라미터 추가
   const role = sessionStorage.getItem('userRole') || '';
   const devParam = role === 'dev' ? (path.includes('?') ? '&dev=1' : '?dev=1') : '';
+  frame.onload = () => {
+    pushRoleToFrame(frame);
+    if (typeof pushCSVToFrame === 'function') pushCSVToFrame();
+  };
   frame.src = path + devParam;
-
-  frame.onload = () => { if (typeof pushCSVToFrame === 'function') pushCSVToFrame(); };
 }
 
 // 외부 링크 → iframe으로만 표시
@@ -812,9 +847,66 @@ function updateFrame() {
       frame.contentWindow.postMessage({ type: 'SCRIPT_URL', url: SCRIPT_URL }, '*');
     } catch(e) {}
     if (typeof pushCSVToFrame === 'function') pushCSVToFrame();
+    // ★ 권한 정보 전송
+    pushRoleToFrame(frame);
   };
   frame.src = url;
 }
+
+// ── 권한 정보를 iframe에 전송 ──────────────────────
+function pushRoleToFrame(frame) {
+  if (!frame || !frame.contentWindow) return;
+  const role = sessionStorage.getItem('userRole') || '';
+  try {
+    frame.contentWindow.postMessage({
+      type:       'ROLE_INFO',
+      role:       role,
+      roleLevel:  ROLE_LEVEL[role] || 0,
+      isAdmin:    (ROLE_LEVEL[role] || 0) >= 4,
+      cardPerms:  window._cardPerms || {},
+      roleLevelMap: MIN_ROLE_LEVEL,
+      roleLabels:   ROLE_LABELS,
+    }, '*');
+  } catch(e) {}
+}
+
+// ── 카드 권한 설정 GAS에서 불러오기 ───────────────
+window._cardPerms = {};
+async function loadCardPerms() {
+  try {
+    const res = await fetch(`${SCRIPT_URL}?action=getCardPerms`, { cache: 'no-cache' });
+    const data = await res.json();
+    if (data.ok) {
+      window._cardPerms = data.perms || {};
+      console.log('[index] 카드권한 로드:', Object.keys(window._cardPerms).length, '페이지');
+    }
+  } catch(e) { console.warn('[index] 카드권한 로드 실패:', e.message); }
+}
+
+// ── 카드 권한 저장 (각 페이지에서 요청 수신) ──────
+window.addEventListener('message', function(e) {
+  const d = e.data || {};
+  if (d.type === 'SAVE_CARD_PERM') {
+    const { pageId, cardId, minRole } = d;
+    if (!pageId || !cardId) return;
+    // 로컬 캐시 업데이트
+    if (!window._cardPerms[pageId]) window._cardPerms[pageId] = {};
+    window._cardPerms[pageId][cardId] = minRole;
+    // GAS에 저장
+    fetch(SCRIPT_URL, {
+      method:  'POST',
+      body:    JSON.stringify({ action: 'saveCardPerm', pageId, cardId, minRole }),
+    }).then(r => r.json()).then(d => {
+      if (!d.ok) console.warn('[index] 카드권한 저장 실패:', d.msg);
+      else {
+        // 저장 후 현재 iframe에 최신 권한 재전송
+        const frame = document.getElementById('mainFrame');
+        if (frame) pushRoleToFrame(frame);
+      }
+    }).catch(err => console.warn('[index] 카드권한 저장 오류:', err));
+  }
+});
+
 
 // ── 헤더 날짜 ─────────────────────────────────────
 function updateHeader() {
@@ -838,7 +930,14 @@ function updateHeader() {
 }
 
 // ── 초기화 ─────────────────────────────────────────
+function openTestServer() {
+  window.open('https://shim0627.github.io/shim0627/', '_blank');
+}
+
 function init() {
+  // ★ 카드 권한 설정 GAS에서 선로드
+  loadCardPerms();
+
   renderMonthly();
   renderWeekly();
 
@@ -868,18 +967,46 @@ function init() {
 
 // ── 계정 정보 ──────────────────────────────────────
 const ACCOUNTS = {
+  '관리자':    { pw: 'admin0000',  role: 'admin'  },
   '리더급':    { pw: 'rnjsaltnr', role: 'leader' },
   '꿈비':      { pw: 'hihi00',    role: 'ggumbi' },
   '에르모어':  { pw: 'dpfmahdj', role: 'ermore' },
   '개발자모드': { pw: 'tladntmd', role: 'dev' },
 };
 
+// ── 권한 등급 정의 (상위가 하위 포함) ─────────────
+// admin > leader > user > affiliate
+// ※ role 매핑: ggumbi/ermore → user/affiliate 계열
+// dev는 admin과 동급 (관리자모드 표시 포함)
+const ROLE_LEVEL = {
+  'admin':  4,
+  'dev':    4,   // 개발자도 관리자급 (설정 아이콘 표시)
+  'leader': 3,
+  'ggumbi': 2,   // user 등급
+  'ermore': 1,   // affiliate 등급
+};
+// minRole key → level 매핑 (카드 권한 설정용)
+const MIN_ROLE_LEVEL = {
+  'admin':     4,
+  'leader':    3,
+  'user':      2,
+  'affiliate': 1,
+};
+// minRole 한글 라벨
+const ROLE_LABELS = {
+  'admin':     '관리자',
+  'leader':    '리더급',
+  'user':      '사용자',
+  'affiliate': '계열사',
+};
+
 // 역할별 허용 탭 목록 (null = 전체허용)
 const ROLE_TABS = {
-  'leader': ['AI보고','상담분석','주요kpi','상담실적','반품현황','처리현황','품질관리','건별보고','팀Tool'],
+  'admin':  null,
+  'dev':    null,
+  'leader': ['AI보고','상담분석','주요kpi','상담실적','반품현황','처리현황','품질관리','건별보고','팀Tool','개발자'],
   'ggumbi': ['AI보고','상담분석','주요kpi','상담실적','반품현황','처리현황','품질관리','건별보고','팀Tool'],
   'ermore': ['팀Tool'],
-  'dev':    null,
 };
 
 function applyRolePermissions(role) {
@@ -987,6 +1114,11 @@ function tryLogin() {
   if (btn) btn.textContent = `🔒 ${id} · 로그아웃`;
 
   applyRolePermissions(account.role);
+  // ★ 로그인 후 현재 iframe에 권한 즉시 전송
+  setTimeout(() => {
+    const frame = document.getElementById('mainFrame');
+    if (frame) pushRoleToFrame(frame);
+  }, 300);
 }
 
 function doLogout() {
@@ -1007,6 +1139,13 @@ function doLogout() {
     const id  = sessionStorage.getItem('userId') || '';
     const btn = document.querySelector('.logout-btn');
     if (btn && id) btn.textContent = `🔒 ${id} · 로그아웃`;
+    // ★ 세션 유지 상태 → 권한 재적용 + iframe 전송
+    const savedRole = sessionStorage.getItem('userRole') || '';
+    setTimeout(() => {
+      if (savedRole) applyRolePermissions(savedRole);
+      const frame = document.getElementById('mainFrame');
+      if (frame) pushRoleToFrame(frame);
+    }, 500);
     return;
   }
 
