@@ -755,10 +755,19 @@ function applyRolePermissions(role) {
 const VIS_SHEET = '페이지열람권한';
 
 // GAS에서 설정 로드
+// GAS는 브라우저 직접 POST CORS를 차단하므로
+// GET + jsonData 파라미터 방식으로 통일 (GAS doGet에서 처리)
+async function gasGet(params) {
+  const qs = Object.entries(params)
+    .map(([k,v]) => `${encodeURIComponent(k)}=${encodeURIComponent(typeof v === 'object' ? JSON.stringify(v) : v)}`)
+    .join('&');
+  const res = await fetch(`${SCRIPT_URL}?${qs}`, { redirect: 'follow' });
+  return res.json();
+}
+
 async function loadVisSettings() {
   try {
-    const res  = await fetch(`${SCRIPT_URL}?action=getVisSettings`);
-    const json = await res.json();
+    const json = await gasGet({ action: 'getVisSettings' });
     if (json.ok && json.settings) {
       VIS_SETTINGS = json.settings;
       visSettingsLoaded = true;
@@ -766,19 +775,19 @@ async function loadVisSettings() {
     }
   } catch(e) {
     console.warn('[VIS] 설정 로드 실패:', e.message);
-    visSettingsLoaded = true; // 실패해도 로컬 상태로 동작
+    visSettingsLoaded = true;
   }
 }
 
-// GAS에 설정 저장
+// GAS에 설정 저장 (GET 방식 — settingsJson 파라미터로 전달)
 async function saveVisToGAS() {
   try {
-    const res  = await fetch(SCRIPT_URL, {
-      method: 'POST',
-      headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify({ action: 'saveVisSettings', settings: VIS_SETTINGS })
+    const userId = sessionStorage.getItem('userId') || '관리자모드';
+    const json = await gasGet({
+      action:       'saveVisSettings',
+      settingsJson: JSON.stringify(VIS_SETTINGS),
+      savedBy:      userId
     });
-    const json = await res.json();
     return json.ok;
   } catch(e) {
     console.warn('[VIS] 저장 실패:', e.message);
